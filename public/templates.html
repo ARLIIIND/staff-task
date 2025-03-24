@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff&Task - Templates</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .template-card {
+            transition: all 0.3s ease;
+        }
+        
+        .template-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .template-preview {
+            height: 120px;
+            overflow: hidden;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        @keyframes newCard {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .new-card {
+            animation: newCard 0.4s ease-out;
+        }
+        
+        /* Navigation styles */
+        .nav-link {
+            transition: all 0.2s ease;
+            padding: 0 16px;
+            margin: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #4c6ef5;
+            background-color: rgba(76, 110, 245, 0.1);
+        }
+        
+        .user-Arlind { background-color: #4c6ef5; }
+        .user-Fatma { background-color: #e64980; }
+        .user-Lucas { background-color: #4dabf7; }
+        .user-Salma { background-color: #fab005; }
+        .user-Khadija { background-color: #82c91e; }
+        .user-Imen { background-color: #be4bdb; }
+        
+        .column-preview {
+            background-color: #ebf0f5;
+            min-width: 120px;
+            max-width: 120px;
+            height: 80px;
+            overflow: hidden;
+            font-size: 10px;
+            border-radius: 4px;
+        }
+        
+        .column-preview-header {
+            background-color: #d9e2ed;
+            padding: 3px 5px;
+            font-weight: bold;
+            font-size: 9px;
+        }
+        
+        .task-preview {
+            background-color: white;
+            margin: 3px;
+            padding: 3px;
+            border-radius: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Barre de navigation principale -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold text-indigo-600">Staff&Task</h1>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-0">
+                        <a href="projects.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Projets
+                        </a>
+                        <a href="#" class="nav-link active border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Templates
+                        </a>
+                        <a href="app.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Workspace
+                        </a>                    
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div id="onlineUsers" class="flex space-x-2">
+                        <!-- Les utilisateurs en ligne seront affichés ici -->
+                    </div>
+                    <div class="ml-3 relative">
+                        <div id="currentUserAvatar" class="user-avatar cursor-pointer">
+                            <!-- Initiales de l'utilisateur actuel -->
+                        </div>
+                    </div>
+                    <button id="logoutBtn" class="ml-4 px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section principale -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="mb-6 flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-gray-800">Templates</h2>
+            <button id="createTemplateBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center">
+                <i class="fas fa-plus mr-2"></i> Créer un template
+            </button>
+        </div>
+
+        <!-- Grille des templates -->
+        <div id="templatesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Les templates seront générés ici dynamiquement -->
+        </div>
+    </main>
+
+    <!-- Modal pour créer un template -->
+    <div id="createTemplateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Créer un nouveau template</h3>
+            <div>
+                <label for="templateTitle" class="block text-sm font-medium text-gray-700 mb-1">Titre du template</label>
+                <input type="text" id="templateTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sections</label>
+                <div id="templateSections" class="mb-2 space-y-2">
+                    <div class="flex items-center">
+                        <input type="text" placeholder="Titre de la section" class="template-section w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button class="remove-section ml-2 text-red-500 hover:text-red-700 px-2" type="button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="addSectionBtn" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm flex items-center" type="button">
+                    <i class="fas fa-plus mr-1"></i> Ajouter une section
+                </button>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancelCreateTemplate" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="saveNewTemplate" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Créer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour confirmer la suppression d'un template -->
+    <div id="deleteTemplateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Supprimer le template</h3>
+            <p class="text-gray-700 mb-4">Êtes-vous sûr de vouloir supprimer ce template ? Cette action est irréversible.</p>
+            <input type="hidden" id="deleteTemplateId">
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDeleteTemplate" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="confirmDeleteTemplate" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const users = [
+        { username: 'Arlind', color: 'user-Arlind' },
+        { username: 'Fatma', color: 'user-Fatma' },
+        { username: 'Lucas', color: 'user-Lucas' },
+        { username: 'Salma', color: 'user-Salma' },
+        { username: 'Khadija', color: 'user-Khadija' },
+        { username: 'Imen', color: 'user-Imen' }
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const currentUserAvatar = document.getElementById('currentUserAvatar');
+        const userInfo = users.find(u => u.username === currentUser);
+        if (userInfo) {
+            currentUserAvatar.classList.add(userInfo.color);
+            currentUserAvatar.textContent = currentUser.substring(0, 1);
+        }
+
+        const onlineUsers = document.getElementById('onlineUsers');
+        const onlineUsersList = users.filter(u => Math.random() > 0.3);
+        onlineUsersList.forEach(user => {
+            if (user.username !== currentUser) {
+                const avatar = document.createElement('div');
+                avatar.className = `user-avatar ${user.color}`;
+                avatar.textContent = user.username.substring(0, 1);
+                avatar.title = user.username;
+                onlineUsers.appendChild(avatar);
+            }
+        });
+
+        loadTemplates();
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+
+        initCreateTemplateModal();
+    });
+
+    async function loadTemplates() {
+        const templatesGrid = document.getElementById('templatesGrid');
+        templatesGrid.innerHTML = '';
+
+        try {
+            const response = await fetch('http://localhost:3000/api/templates');
+            const templates = await response.json();
+
+            if (templates.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'col-span-full text-center py-12';
+                emptyMessage.innerHTML = `
+                    <div class="text-gray-400 mb-4"><i class="fas fa-clipboard-list text-4xl"></i></div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-1">Aucun template</h3>
+                    <p class="text-gray-500">Créez votre premier template pour commencer</p>
+                `;
+                templatesGrid.appendChild(emptyMessage);
+                return;
+            }
+
+            templates.forEach((template, index) => {
+                const templateCard = createTemplateCard(template, index);
+                templatesGrid.appendChild(templateCard);
+            });
+        } catch (error) {
+            console.error('Erreur lors du chargement des templates:', error);
+        }
+    }
+
+    function createTemplateCard(template, index) {
+        const card = document.createElement('div');
+        card.className = 'template-card bg-white rounded-lg shadow-md overflow-hidden new-card';
+        card.dataset.id = template.id;
+
+        const preview = document.createElement('div');
+        preview.className = 'template-preview p-3 bg-gray-50 border-b flex space-x-2 overflow-x-auto';
+
+        template.columns.forEach(column => {
+            const columnPreview = document.createElement('div');
+            columnPreview.className = 'column-preview flex-shrink-0';
+
+            const columnHeader = document.createElement('div');
+            columnHeader.className = 'column-preview-header';
+            columnHeader.textContent = column.title;
+            columnPreview.appendChild(columnHeader);
+
+            const tasksToShow = column.tasks.slice(0, 3);
+            tasksToShow.forEach(task => {
+                const taskPreview = document.createElement('div');
+                taskPreview.className = 'task-preview';
+                taskPreview.textContent = task.title;
+                columnPreview.appendChild(taskPreview);
+            });
+
+            preview.appendChild(columnPreview);
+        });
+
+        const content = document.createElement('div');
+        content.className = 'p-4';
+
+        const titleRow = document.createElement('div');
+        titleRow.className = 'flex justify-between items-center mb-2';
+
+        const title = document.createElement('h3');
+        title.className = 'font-medium text-lg text-gray-800';
+        title.textContent = template.title;
+
+        const actions = document.createElement('div');
+        actions.className = 'flex space-x-1';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'text-gray-400 hover:text-red-500 p-1';
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openDeleteTemplateModal(template.id);
+        });
+
+        actions.appendChild(deleteBtn);
+        titleRow.appendChild(title);
+        titleRow.appendChild(actions);
+
+        const info = document.createElement('div');
+        info.className = 'text-sm text-gray-500';
+        info.innerHTML = `
+            <div><i class="fas fa-columns mr-1"></i> ${template.columns.length} sections</div>
+            <div><i class="fas fa-tasks mr-1"></i> ${template.columns.reduce((acc, col) => acc + col.tasks.length, 0)} tâches</div>
+        `;
+
+        const useBtn = document.createElement('button');
+        useBtn.className = 'mt-4 w-full py-2 bg-indigo-100 text-indigo-700 rounded flex items-center justify-center hover:bg-indigo-200 transition-colors';
+        useBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Utiliser ce template';
+        useBtn.addEventListener('click', () => useTemplate(template));
+
+        content.appendChild(titleRow);
+        content.appendChild(info);
+        content.appendChild(useBtn);
+
+        card.appendChild(preview);
+        card.appendChild(content);
+
+        return card;
+    }
+
+    function initCreateTemplateModal() {
+        document.getElementById('addSectionBtn').addEventListener('click', function() {
+            const templateSections = document.getElementById('templateSections');
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'flex items-center';
+            sectionDiv.innerHTML = `
+                <input type="text" placeholder="Titre de la section" class="template-section w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button class="remove-section ml-2 text-red-500 hover:text-red-700 px-2" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            templateSections.appendChild(sectionDiv);
+
+            sectionDiv.querySelector('.remove-section').addEventListener('click', function() {
+                sectionDiv.remove();
+            });
+        });
+
+        document.querySelector('.remove-section').addEventListener('click', function() {
+            this.closest('.flex').remove();
+        });
+
+        document.getElementById('createTemplateBtn').addEventListener('click', function() {
+            document.getElementById('createTemplateModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelCreateTemplate').addEventListener('click', function() {
+            document.getElementById('createTemplateModal').classList.add('hidden');
+        });
+
+        document.getElementById('saveNewTemplate').addEventListener('click', async function() {
+            const templateTitle = document.getElementById('templateTitle').value.trim();
+            if (!templateTitle) {
+                alert('Veuillez entrer un titre pour le template.');
+                return;
+            }
+
+            const sectionInputs = document.querySelectorAll('.template-section');
+            const sections = [];
+
+            let hasEmptySection = false;
+            sectionInputs.forEach(input => {
+                const title = input.value.trim();
+                if (!title) {
+                    hasEmptySection = true;
+                    return;
+                }
+                sections.push({
+                    id: 'col-' + Date.now() + '-' + sections.length,
+                    title: title,
+                    color: '#4c6ef5',
+                    tasks: []
+                });
+            });
+
+            if (hasEmptySection) {
+                alert('Veuillez remplir toutes les sections ou supprimer les sections vides.');
+                return;
+            }
+
+            if (sections.length === 0) {
+                alert('Veuillez ajouter au moins une section.');
+                return;
+            }
+
+            const newTemplate = {
+                title: templateTitle,
+                columns: sections
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/templates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newTemplate)
+                });
+                await response.json();
+                loadTemplates();
+                document.getElementById('createTemplateModal').classList.add('hidden');
+
+                document.getElementById('templateTitle').value = '';
+                document.getElementById('templateSections').innerHTML = `
+                    <div class="flex items-center">
+                        <input type="text" placeholder="Titre de la section" class="template-section w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button class="remove-section ml-2 text-red-500 hover:text-red-700 px-2" type="button">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                document.querySelector('.remove-section').addEventListener('click', function() {
+                    this.closest('.flex').remove();
+                });
+            } catch (error) {
+                console.error('Erreur lors de la création du template:', error);
+            }
+        });
+    }
+
+    async function openDeleteTemplateModal(templateId) {
+        document.getElementById('deleteTemplateId').value = templateId;
+        document.getElementById('deleteTemplateModal').classList.remove('hidden');
+
+        document.getElementById('cancelDeleteTemplate').onclick = function() {
+            document.getElementById('deleteTemplateModal').classList.add('hidden');
+        };
+
+        document.getElementById('confirmDeleteTemplate').onclick = async function() {
+            try {
+                await fetch(`http://localhost:3000/api/templates/${templateId}`, {
+                    method: 'DELETE'
+                });
+                loadTemplates();
+                document.getElementById('deleteTemplateModal').classList.add('hidden');
+            } catch (error) {
+                console.error('Erreur lors de la suppression:', error);
+            }
+        };
+    }
+
+    async function useTemplate(template) {
+        const newBoard = JSON.parse(JSON.stringify(template));
+        newBoard.id = 'board-' + Date.now();
+
+        try {
+            const projectResponse = await fetch('http://localhost:3000/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: newBoard.title,
+                    createdBy: localStorage.getItem('currentUser')
+                })
+            });
+            const project = await projectResponse.json();
+
+            await fetch(`http://localhost:3000/api/board/${project.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newBoard)
+            });
+
+            localStorage.setItem('currentProject', project.id);
+            window.location.href = 'app.html';
+        } catch (error) {
+            console.error('Erreur lors de l’utilisation du template:', error);
+        }
+    }
+</script>
+</body>
+</html>

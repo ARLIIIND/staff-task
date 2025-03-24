@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff&Task - Tableau de bord</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        .board-container {
+            overflow-x: auto;
+            height: calc(100vh - 180px);
+            display: flex;
+            justify-content: center;
+            padding-bottom: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        .column {
+            background-color: #ebf0f5;
+            transition: all 0.3s ease;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            margin-top: 0;
+            min-width: 280px;
+            margin-left: 5px;
+            margin-right: 5px;
+            border-radius: 8px;
+            cursor: move;
+        }
+        
+        .column:hover {
+            background-color: #e5edf5;
+        }
+        
+        .task-card {
+            background-color: white;
+            transition: all 0.2s ease;
+            cursor: move;
+            position: relative;
+            user-select: none;
+            border-radius: 6px;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .task-card.selected {
+            border: 2px solid #4c6ef5;
+            background-color: #f0f5ff;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .task-assignee-container {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .task-assignee {
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: opacity 0.2s ease;
+        }
+        
+        .task-assignee-container:hover .task-assignee {
+            opacity: 0;
+        }
+        
+        .task-assignee-container:hover .check-btn {
+            display: flex;
+        }
+        
+        .check-btn {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-color: #34c759;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .check-btn.disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .subtask {
+            margin-left: 20px;
+            font-size: 12px;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border-radius: 3px;
+        }
+        
+        .subtask.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        
+        .subtask-hidden {
+            display: none;
+        }
+        
+        .toggle-subtasks {
+            margin-left: 20px;
+            font-size: 12px;
+            color: #4c6ef5;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .drag-ghost {
+            opacity: 0.5;
+            background: #f0f0f0;
+            transform: rotate(3deg);
+        }
+        
+        .add-card, .add-column {
+            transition: all 0.3s ease;
+        }
+        
+        .add-card:hover, .add-column:hover {
+            background-color: #dbe4f0;
+        }
+        
+        @keyframes newCard {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .new-card {
+            animation: newCard 0.3s ease-out;
+        }
+        
+        .nav-link {
+            transition: all 0.2s ease;
+            padding: 0 16px;
+            margin: 0;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #4c6ef5;
+            background-color: rgba(76, 110, 245, 0.1);
+        }
+        
+        .stats-panel {
+            width: 300px;
+            background-color: white;
+            padding: 15px;
+            border-left: 1px solid #e5e7eb;
+            overflow-y: auto;
+            height: calc(100vh - 64px);
+        }
+        
+        .stats-progress {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .stats-progress-bar {
+            height: 100%;
+            background-color: #4c6ef5;
+            transition: width 0.3s ease;
+        }
+        
+        .stats-progress-bar.global {
+            background-color: #34c759;
+        }
+        
+        .board-container::-webkit-scrollbar,
+        .column::-webkit-scrollbar,
+        .stats-panel::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .board-container,
+        .column,
+        .stats-panel {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+        }
+        
+        /* Toaster styles */
+        .toaster {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f87171;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .toaster.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Barre de navigation principale -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold text-indigo-600">Staff&Task</h1>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-0">
+                        <a href="projects.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Projets</a>
+                        <a href="templates.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Templates</a>
+                        <a href="#" class="nav-link active border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Workspace</a>                        
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div id="onlineUsers" class="flex space-x-2">
+                        <!-- Les utilisateurs en ligne seront affichés ici dynamiquement -->
+                    </div>
+                    <div class="ml-3 relative">
+                        <div id="currentUserAvatar" class="user-avatar cursor-pointer"></div>
+                    </div>
+                    <button id="logoutBtn" class="ml-4 px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section principale -->
+    <main class="flex max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Conteneur du tableau Kanban -->
+        <div class="flex-1 pr-4">
+            <div class="py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <h2 id="boardTitle" class="text-2xl font-bold text-gray-800 mr-2">Tableau principal</h2>
+                    <button id="editBoardTitle" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                <div class="flex space-x-3">
+                    <button id="saveAsTemplate" class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors">
+                        <i class="far fa-save mr-1"></i> Enregistrer comme template
+                    </button>
+                    <button id="addColumnBtn" class="add-column flex items-center px-4 py-2 bg-white rounded-md shadow-sm hover:bg-gray-50 text-gray-700">
+                        <i class="fas fa-plus mr-2"></i> Ajouter une section
+                    </button>
+                </div>
+            </div>
+
+            <div class="board-container" id="boardContainer">
+                <!-- Les colonnes seront générées ici dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Panneau des statistiques -->
+        <div class="stats-panel">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Statistiques</h3>
+            <div id="teamProgress" class="mb-6">
+                <!-- Avancée de l'équipe sera affichée ici -->
+            </div>
+            <div id="userStats">
+                <!-- Les stats seront générées ici -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Toaster -->
+    <div id="toaster" class="toaster"></div>
+
+    <!-- Modals -->
+    <!-- Modal pour éditer le titre du tableau -->
+    <div id="editTitleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Modifier le titre</h3>
+            <input type="text" id="newBoardTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancelEditTitle" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="saveBoardTitle" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter/éditer une tâche -->
+    <div id="taskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 id="taskModalTitle" class="text-lg font-medium text-gray-900 mb-4">Ajouter une tâche</h3>
+            <input type="text" id="taskTitle" placeholder="Titre de la tâche" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
+            <textarea id="taskDescription" placeholder="Description (optionnelle)" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 mb-3"></textarea>
+            
+            <div class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                <select id="taskColumnSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
+                    <!-- Options générées dynamiquement -->
+                </select>
+            </div>
+            
+            <div class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Assigner à</label>
+                <select id="taskAssignee" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
+                    <option value="">Non assigné</option>
+                    <!-- Options générées dynamiquement -->
+                </select>
+            </div>
+            
+            <div id="subtasksContainer" class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sous-tâches</label>
+                <div id="subtasksList" class="space-y-2"></div>
+                <button id="addSubtaskBtn" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                    <i class="fas fa-plus mr-1"></i> Ajouter une sous-tâche
+                </button>
+            </div>
+            
+            <input type="hidden" id="taskId" value="">
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancelTask" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="deleteTask" class="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 hidden">Supprimer</button>
+                <button id="saveTask" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter/éditer une colonne -->
+    <div id="columnModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 id="columnModalTitle" class="text-lg font-medium text-gray-900 mb-4">Ajouter une section</h3>
+            <input type="text" id="columnTitle" placeholder="Titre de la section" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
+            <div class="mt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Couleur de la bordure</label>
+                <input type="color" id="columnColor" class="w-full h-10 border border-gray-300 rounded-md">
+            </div>
+            <input type="hidden" id="columnId" value="">
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancelColumn" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="deleteColumn" class="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 hidden">Supprimer</button>
+                <button id="saveColumn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour confirmer la suppression d'une section -->
+    <div id="confirmDeleteColumnModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Confirmer la suppression</h3>
+            <p id="confirmDeleteMessage" class="text-sm text-gray-600 mb-4">
+                La section "<span id="columnName"></span>" contient des tâches. Voulez-vous vraiment la supprimer ?
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDeleteColumn" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="confirmDeleteColumn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour enregistrer comme template -->
+    <div id="saveTemplateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Enregistrer comme template</h3>
+            <input type="text" id="templateName" placeholder="Nom du template" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="mt-4 flex justify-end space-x-3">
+                <button id="cancelTemplate" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+                <button id="saveTemplate" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let boardData = null;
+        const socket = io('http://localhost:3000', {
+            query: { username: localStorage.getItem('currentUser') }
+        });
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const currentUserAvatar = document.getElementById('currentUserAvatar');
+            currentUserAvatar.classList.add('bg-indigo-600');
+            currentUserAvatar.textContent = currentUser.substring(0, 1);
+
+            const projectId = localStorage.getItem('currentProject');
+            if (!projectId) {
+                window.location.href = 'projects.html';
+                return;
+            }
+
+            try {
+                // Vérifier l'accès au projet
+                const response = await fetch(`http://localhost:3000/api/board/${projectId}`, {
+                    headers: { 'x-username': currentUser }
+                });
+                if (!response.ok) throw new Error((await response.json()).error);
+                boardData = await response.json();
+            } catch (error) {
+                showToaster(error.message || 'Erreur lors du chargement du tableau');
+                window.location.href = 'projects.html';
+                return;
+            }
+
+            initBoard();
+            updateStats();
+            initColumnDragAndDrop();
+
+            socket.emit('joinProject', projectId);
+            socket.on('boardUpdate', (data) => {
+                if (data.projectId === projectId) {
+                    boardData = data.board;
+                    initBoard();
+                    updateStats();
+                }
+            });
+
+            socket.on('onlineUsers', (users) => {
+                const onlineUsersDiv = document.getElementById('onlineUsers');
+                onlineUsersDiv.innerHTML = '';
+                users.forEach(username => {
+                    if (username !== currentUser) {
+                        const avatar = document.createElement('div');
+                        avatar.className = 'user-avatar bg-indigo-600';
+                        avatar.textContent = username.substring(0, 1);
+                        avatar.title = username;
+                        onlineUsersDiv.appendChild(avatar);
+                    }
+                });
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentProject');
+                window.location.href = 'index.html';
+            });
+        });
+
+        async function loadBoardData(projectId) {
+            const currentUser = localStorage.getItem('currentUser');
+            const response = await fetch(`http://localhost:3000/api/board/${projectId}`, {
+                headers: { 'x-username': currentUser }
+            });
+            if (!response.ok) throw new Error((await response.json()).error);
+            return await response.json();
+        }
+
+        async function saveBoardData() {
+            const projectId = localStorage.getItem('currentProject');
+            const currentUser = localStorage.getItem('currentUser');
+            try {
+                await fetch(`http://localhost:3000/api/board/${projectId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-username': currentUser
+                    },
+                    body: JSON.stringify(boardData)
+                });
+                socket.emit('boardUpdate', { projectId, board: boardData });
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde du tableau:', error);
+            }
+        }
+
+        function initBoard() {
+            const boardContainer = document.querySelector('.board-container');
+            boardContainer.innerHTML = '';
+            document.getElementById('boardTitle').textContent = boardData.title;
+            
+            boardData.columns.forEach(column => {
+                const columnElement = createColumnElement(column);
+                boardContainer.appendChild(columnElement);
+            });
+            
+            initDragAndDrop();
+            initMultiSelect();
+            initColumnDragAndDrop();
+        }
+
+        function createColumnElement(column) {
+            const columnElement = document.createElement('div');
+            columnElement.className = 'column flex-shrink-0 w-72 rounded-md shadow-sm';
+            columnElement.dataset.id = column.id;
+            
+            const columnHeader = document.createElement('div');
+            columnHeader.className = 'p-3 bg-gray-100 border-b flex justify-between items-center relative';
+            const colorBorder = document.createElement('div');
+            colorBorder.style.position = 'absolute';
+            colorBorder.style.top = '0';
+            colorBorder.style.left = '0';
+            colorBorder.style.right = '0';
+            colorBorder.style.height = '4px';
+            colorBorder.style.backgroundColor = column.color || '#f5f7fa';
+            columnHeader.appendChild(colorBorder);
+            
+            const columnTitle = document.createElement('h3');
+            columnTitle.className = 'font-medium text-gray-800';
+            columnTitle.textContent = column.title;
+            
+            const columnActions = document.createElement('div');
+            columnActions.className = 'flex space-x-2';
+            const editColumnBtn = document.createElement('button');
+            editColumnBtn.className = 'text-gray-500 hover:text-gray-700';
+            editColumnBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editColumnBtn.addEventListener('click', () => openEditColumnModal(column));
+            
+            columnActions.appendChild(editColumnBtn);
+            columnHeader.appendChild(columnTitle);
+            columnHeader.appendChild(columnActions);
+            
+            const columnContent = document.createElement('div');
+            columnContent.className = 'p-2 task-list';
+            columnContent.dataset.columnId = column.id;
+            
+            column.tasks.forEach(task => {
+                const taskElement = createTaskElement(task);
+                columnContent.appendChild(taskElement);
+            });
+            
+            const addCardBtn = document.createElement('div');
+            addCardBtn.className = 'add-card p-2 m-2 text-gray-600 text-sm rounded flex items-center cursor-pointer';
+            addCardBtn.innerHTML = '<i class="fas fa-plus mr-2"></i> Ajouter une tâche';
+            addCardBtn.addEventListener('click', () => openAddTaskModal(column.id));
+            
+            columnElement.appendChild(columnHeader);
+            columnElement.appendChild(columnContent);
+            columnElement.appendChild(addCardBtn);
+            
+            return columnElement;
+        }
+
+        function createTaskElement(task) {
+            const taskElement = document.createElement('div');
+            taskElement.className = 'task-card p-3 mb-2 rounded shadow-sm new-card';
+            taskElement.dataset.id = task.id;
+            
+            const taskTitle = document.createElement('div');
+            taskTitle.className = 'font-medium text-gray-800 mb-1';
+            taskTitle.textContent = task.title;
+            
+            if (task.assignee) {
+                const assigneeContainer = document.createElement('div');
+                assigneeContainer.className = 'task-assignee-container';
+                const assignee = document.createElement('div');
+                assignee.className = 'task-assignee bg-indigo-600';
+                assignee.textContent = task.assignee.substring(0, 1);
+                
+                const currentUser = localStorage.getItem('currentUser');
+                const hasIncompleteSubtasks = task.subtasks && task.subtasks.some(st => !st.completed);
+                const canComplete = task.assignee === currentUser && !hasIncompleteSubtasks;
+                
+                const checkBtn = document.createElement('div');
+                checkBtn.className = `check-btn ${!canComplete ? 'disabled' : ''}`;
+                checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+                if (canComplete) {
+                    checkBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
+                        const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
+                        moveTask(task.id, sourceColumnId, targetColumnId);
+                        saveBoardData();
+                        initBoard();
+                        updateStats();
+                    });
+                }
+                
+                assigneeContainer.appendChild(assignee);
+                assigneeContainer.appendChild(checkBtn);
+                taskElement.appendChild(assigneeContainer);
+            }
+            
+            const taskDescription = document.createElement('div');
+            taskDescription.className = 'text-sm text-gray-600';
+            taskDescription.textContent = task.description || '';
+            
+            taskElement.appendChild(taskTitle);
+            if (task.description) taskElement.appendChild(taskDescription);
+            
+            if (task.subtasks && task.subtasks.length > 0) {
+                const subtasksContainer = document.createElement('div');
+                subtasksContainer.className = 'mt-2 subtasks-container';
+                subtasksContainer.dataset.taskId = task.id;
+                
+                task.subtasks.forEach((subtask, index) => {
+                    const subtaskElement = document.createElement('div');
+                    subtaskElement.className = `subtask ${subtask.completed ? 'completed' : ''} ${index > 1 ? 'subtask-hidden' : ''}`;
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = subtask.completed;
+                    checkbox.addEventListener('change', (e) => {
+                        e.stopPropagation();
+                        subtask.completed = e.target.checked;
+                        subtaskElement.classList.toggle('completed', subtask.completed);
+                        saveBoardData();
+                        updateStats();
+                        const hasIncompleteSubtasks = task.subtasks.some(st => !st.completed);
+                        const checkBtn = taskElement.querySelector('.check-btn');
+                        if (checkBtn) {
+                            checkBtn.classList.toggle('disabled', hasIncompleteSubtasks);
+                            if (!hasIncompleteSubtasks && task.assignee === localStorage.getItem('currentUser')) {
+                                checkBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
+                                    const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
+                                    moveTask(task.id, sourceColumnId, targetColumnId);
+                                    saveBoardData();
+                                    initBoard();
+                                    updateStats();
+                                });
+                            }
+                        }
+                    });
+                    subtaskElement.appendChild(checkbox);
+                    const subtaskText = document.createElement('span');
+                    subtaskText.textContent = ` ${subtask.title}`;
+                    subtaskElement.appendChild(subtaskText);
+                    subtasksContainer.appendChild(subtaskElement);
+                });
+                
+                if (task.subtasks.length > 2) {
+                    const toggleButton = document.createElement('div');
+                    toggleButton.className = 'toggle-subtasks';
+                    toggleButton.textContent = 'Voir plus';
+                    toggleButton.dataset.expanded = 'false';
+                    toggleButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const isExpanded = toggleButton.dataset.expanded === 'true';
+                        const subtasks = subtasksContainer.querySelectorAll('.subtask');
+                        subtasks.forEach((subtask, index) => {
+                            if (index > 1) {
+                                if (isExpanded) {
+                                    subtask.classList.add('subtask-hidden');
+                                } else {
+                                    subtask.classList.remove('subtask-hidden');
+                                }
+                            }
+                        });
+                        toggleButton.textContent = isExpanded ? 'Voir plus' : 'Voir moins';
+                        toggleButton.dataset.expanded = !isExpanded;
+                    });
+                    subtasksContainer.appendChild(toggleButton);
+                }
+                
+                taskElement.appendChild(subtasksContainer);
+            }
+            
+            taskElement.addEventListener('click', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    taskElement.classList.toggle('selected');
+                } else if (!e.target.closest('.subtask input') && !e.target.closest('.check-btn')) {
+                    openEditTaskModal(task);
+                }
+            });
+            
+            return taskElement;
+        }
+
+        function initDragAndDrop() {
+            const taskLists = document.querySelectorAll('.task-list');
+            taskLists.forEach(list => {
+                new Sortable(list, {
+                    group: 'tasks',
+                    animation: 150,
+                    ghostClass: 'drag-ghost',
+                    handle: '.task-card',
+                    forceFallback: false,
+                    onEnd: function(evt) {
+                        const taskId = evt.item.dataset.id;
+                        const sourceColumnId = evt.from.dataset.columnId;
+                        const targetColumnId = evt.to.dataset.columnId;
+                        const targetColumn = boardData.columns.find(col => col.id === targetColumnId);
+                        const task = findTaskById(taskId);
+                        const finalColumnId = boardData.columns[boardData.columns.length - 1].id;
+                        const finalColumnTitle = boardData.columns[boardData.columns.length - 1].title;
+
+                        if (targetColumnId === finalColumnId && task.subtasks && task.subtasks.some(st => !st.completed)) {
+                            showToaster(`Impossible de déplacer vers "${finalColumnTitle}" : des sous-tâches ne sont pas terminées.`);
+                            initBoard();
+                            return;
+                        }
+
+                        const sourceColumn = boardData.columns.find(col => col.id === sourceColumnId);
+                        const targetColumnData = boardData.columns.find(col => col.id === targetColumnId);
+                        const taskIndex = sourceColumn.tasks.findIndex(t => t.id === taskId);
+                        const [movedTask] = sourceColumn.tasks.splice(taskIndex, 1);
+
+                        const newIndex = evt.newIndex;
+                        if (newIndex >= targetColumnData.tasks.length) {
+                            targetColumnData.tasks.push(movedTask);
+                        } else {
+                            targetColumnData.tasks.splice(newIndex, 0, movedTask);
+                        }
+
+                        saveBoardData();
+                        updateStats();
+                    }
+                });
+            });
+        }
+
+        function initColumnDragAndDrop() {
+            const boardContainer = document.getElementById('boardContainer');
+            new Sortable(boardContainer, {
+                animation: 150,
+                handle: '.column',
+                onEnd: function(evt) {
+                    const columnId = evt.item.dataset.id;
+                    const newIndex = evt.newIndex;
+                    const oldIndex = evt.oldIndex;
+                    
+                    const column = boardData.columns.splice(oldIndex, 1)[0];
+                    boardData.columns.splice(newIndex, 0, column);
+                    
+                    saveBoardData();
+                    initBoard();
+                }
+            });
+        }
+
+        function initMultiSelect() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                    e.preventDefault();
+                    const selectedTasks = document.querySelectorAll('.task-card.selected');
+                    if (selectedTasks.length > 0) {
+                        const assignee = prompt('Assigner les tâches sélectionnées à (nom d’utilisateur) :');
+                        if (assignee) {
+                            selectedTasks.forEach(taskElement => {
+                                const taskId = taskElement.dataset.id;
+                                const task = findTaskById(taskId);
+                                if (task) {
+                                    task.assignee = assignee;
+                                }
+                            });
+                            saveBoardData();
+                            initBoard();
+                            updateStats();
+                        }
+                    }
+                }
+            });
+        }
+
+        function findTaskById(taskId) {
+            for (const column of boardData.columns) {
+                const task = column.tasks.find(t => t.id === taskId);
+                if (task) return task;
+            }
+            return null;
+        }
+
+        function moveTask(taskId, sourceColumnId, targetColumnId) {
+            const sourceColumn = boardData.columns.find(col => col.id === sourceColumnId);
+            const targetColumn = boardData.columns.find(col => col.id === targetColumnId);
+            if (sourceColumn && targetColumn) {
+                const taskIndex = sourceColumn.tasks.findIndex(task => task.id === taskId);
+                if (taskIndex !== -1) {
+                    const task = sourceColumn.tasks.splice(taskIndex, 1)[0];
+                    targetColumn.tasks.push(task);
+                }
+            }
+        }
+
+        function showToaster(message) {
+            const toaster = document.getElementById('toaster');
+            toaster.textContent = message;
+            toaster.classList.add('show');
+            setTimeout(() => {
+                toaster.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateStats() {
+            const teamProgressContainer = document.getElementById('teamProgress');
+            const statsContainer = document.getElementById('userStats');
+            teamProgressContainer.innerHTML = '';
+            statsContainer.innerHTML = '';
+            
+            const userStats = {};
+            boardData.columns.forEach(column => {
+                column.tasks.forEach(task => {
+                    if (task.assignee) {
+                        if (!userStats[task.assignee]) {
+                            userStats[task.assignee] = { tasks: [], totalTasks: 0, taskProgressSum: 0 };
+                        }
+                        const userStat = userStats[task.assignee];
+                        userStat.tasks.push({ task, column: column.title });
+                        userStat.totalTasks++;
+                        
+                        let taskProgress = 0;
+                        const finalColumnId = boardData.columns[boardData.columns.length - 1].id;
+                        const isInFinalColumn = column.id === finalColumnId;
+                        
+                        if (task.subtasks && task.subtasks.length > 0) {
+                            const completedSubtasks = task.subtasks.filter(st => st.completed).length;
+                            taskProgress = (completedSubtasks / task.subtasks.length) * 75;
+                            if (isInFinalColumn && task.subtasks.every(st => st.completed)) {
+                                taskProgress = 100;
+                            }
+                        } else {
+                            taskProgress = isInFinalColumn ? 100 : 0;
+                        }
+                        
+                        userStat.taskProgressSum += taskProgress;
+                    }
+                });
+            });
+            
+            let totalProgress = 0;
+            let usersWithTasks = 0;
+            for (const username in userStats) {
+                const stat = userStats[username];
+                if (stat.totalTasks > 0) {
+                    const userProgress = (stat.taskProgressSum / stat.totalTasks);
+                    totalProgress += userProgress;
+                    usersWithTasks++;
+                }
+            }
+            
+            const teamProgress = usersWithTasks > 0 ? totalProgress / usersWithTasks : 0;
+            teamProgressContainer.innerHTML = `<h4 class="font-medium text-gray-700 mb-2">Avancée de l'équipe</h4>`;
+            teamProgressContainer.innerHTML += `<div class="text-base font-semibold text-gray-600 mb-1">${teamProgress.toFixed(0)}%</div>`;
+            const teamProgressBar = document.createElement('div');
+            teamProgressBar.className = 'stats-progress mb-2';
+            const teamProgressFill = document.createElement('div');
+            teamProgressFill.className = 'stats-progress-bar global';
+            teamProgressFill.style.width = `${teamProgress}%`;
+            teamProgressBar.appendChild(teamProgressFill);
+            teamProgressContainer.appendChild(teamProgressBar);
+            
+            const separator = document.createElement('hr');
+            separator.className = 'my-3 border-gray-200';
+            teamProgressContainer.appendChild(separator);
+            
+            for (const username in userStats) {
+                const stat = userStats[username];
+                if (stat.totalTasks > 0) {
+                    const statsDiv = document.createElement('div');
+                    statsDiv.className = 'mb-6';
+                    statsDiv.innerHTML = `<h4 class="font-medium text-gray-700 mb-2">${username}</h4>`;
+                    
+                    const globalProgress = (stat.taskProgressSum / stat.totalTasks);
+                    statsDiv.innerHTML += `<div class="text-base font-semibold text-gray-600 mb-1">Avancement global - ${globalProgress.toFixed(0)}%</div>`;
+                    const globalProgressBar = document.createElement('div');
+                    globalProgressBar.className = 'stats-progress mb-2';
+                    const globalProgressFill = document.createElement('div');
+                    globalProgressFill.className = 'stats-progress-bar';
+                    globalProgressFill.style.width = `${globalProgress}%`;
+                    globalProgressBar.appendChild(globalProgressFill);
+                    statsDiv.appendChild(globalProgressBar);
+                    
+                    const separator = document.createElement('hr');
+                    separator.className = 'my-3 border-gray-200';
+                    statsDiv.appendChild(separator);
+                    
+                    stat.tasks.forEach(({ task, column }) => {
+                        let taskProgress = 0;
+                        const finalColumnId = boardData.columns[boardData.columns.length - 1].id;
+                        const isInFinalColumn = column === boardData.columns.find(col => col.id === finalColumnId).title;
+                        
+                        if (task.subtasks && task.subtasks.length > 0) {
+                            const completedSubtasks = task.subtasks.filter(st => st.completed).length;
+                            taskProgress = (completedSubtasks / task.subtasks.length) * 75;
+                            if (isInFinalColumn && task.subtasks.every(st => st.completed)) {
+                                taskProgress = 100;
+                            }
+                        } else {
+                            taskProgress = isInFinalColumn ? 100 : 0;
+                        }
+                        
+                        const taskDiv = document.createElement('div');
+                        taskDiv.className = 'text-sm text-gray-600 mb-1';
+                        taskDiv.textContent = `${task.title} (${column}) - ${taskProgress.toFixed(0)}%`;
+                        statsDiv.appendChild(taskDiv);
+                        
+                        const progressBar = document.createElement('div');
+                        progressBar.className = 'stats-progress mb-2';
+                        const progressFill = document.createElement('div');
+                        progressFill.className = 'stats-progress-bar';
+                        progressFill.style.width = `${taskProgress}%`;
+                        progressBar.appendChild(progressFill);
+                        statsDiv.appendChild(progressBar);
+                    });
+                    
+                    statsContainer.appendChild(statsDiv);
+                }
+            }
+        }
+
+        function openAddTaskModal(columnId) {
+            const modal = document.getElementById('taskModal');
+            const modalTitle = document.getElementById('taskModalTitle');
+            const taskTitleInput = document.getElementById('taskTitle');
+            const taskDescriptionInput = document.getElementById('taskDescription');
+            const taskIdInput = document.getElementById('taskId');
+            const taskColumnSelect = document.getElementById('taskColumnSelect');
+            const taskAssigneeSelect = document.getElementById('taskAssignee');
+            const subtasksList = document.getElementById('subtasksList');
+            
+            modalTitle.textContent = 'Ajouter une tâche';
+            taskTitleInput.value = '';
+            taskDescriptionInput.value = '';
+            taskIdInput.value = '';
+            subtasksList.innerHTML = '';
+            
+            taskColumnSelect.innerHTML = '';
+            boardData.columns.forEach(column => {
+                const option = document.createElement('option');
+                option.value = column.id;
+                option.textContent = column.title;
+                if (column.id === columnId) option.selected = true;
+                taskColumnSelect.appendChild(option);
+            });
+            
+            taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
+            fetch('http://localhost:3000/api/users', {
+                headers: { 'x-username': localStorage.getItem('currentUser') }
+            })
+            .then(response => response.json())
+            .then(users => {
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.username;
+                    option.textContent = user.username;
+                    taskAssigneeSelect.appendChild(option);
+                });
+            });
+            
+            document.getElementById('deleteTask').classList.add('hidden');
+            modal.classList.remove('hidden');
+            taskTitleInput.focus();
+            
+            document.getElementById('addSubtaskBtn').onclick = addSubtaskInput;
+            
+            document.getElementById('saveTask').onclick = function() {
+                const title = taskTitleInput.value.trim();
+                if (!title) return;
+                
+                const description = taskDescriptionInput.value.trim();
+                const assignee = taskAssigneeSelect.value;
+                const selectedColumnId = taskColumnSelect.value;
+                const subtasks = Array.from(subtasksList.children).map(input => ({
+                    title: input.value.trim(),
+                    completed: false
+                })).filter(st => st.title);
+                
+                const newTask = {
+                    id: 'task-' + Date.now(),
+                    title,
+                    description,
+                    assignee,
+                    subtasks
+                };
+                
+                const column = boardData.columns.find(col => col.id === selectedColumnId);
+                if (column) {
+                    column.tasks.push(newTask);
+                    saveBoardData();
+                    initBoard();
+                    updateStats();
+                }
+                
+                modal.classList.add('hidden');
+            };
+        }
+
+        function addSubtaskInput() {
+            const subtasksList = document.getElementById('subtasksList');
+            const subtaskInput = document.createElement('input');
+            subtaskInput.type = 'text';
+            subtaskInput.placeholder = 'Titre de la sous-tâche';
+            subtaskInput.className = 'w-full px-3 py-1 border border-gray-300 rounded-md mb-2';
+            subtasksList.appendChild(subtaskInput);
+        }
+
+        function openEditTaskModal(task) {
+            const modal = document.getElementById('taskModal');
+            const modalTitle = document.getElementById('taskModalTitle');
+            const taskTitleInput = document.getElementById('taskTitle');
+            const taskDescriptionInput = document.getElementById('taskDescription');
+            const taskIdInput = document.getElementById('taskId');
+            const taskColumnSelect = document.getElementById('taskColumnSelect');
+            const taskAssigneeSelect = document.getElementById('taskAssignee');
+            const subtasksList = document.getElementById('subtasksList');
+            const deleteTaskBtn = document.getElementById('deleteTask');
+            
+            modalTitle.textContent = 'Modifier la tâche';
+            taskTitleInput.value = task.title;
+            taskDescriptionInput.value = task.description || '';
+            taskIdInput.value = task.id;
+            
+            taskColumnSelect.innerHTML = '';
+            let currentColumnId = null;
+            boardData.columns.forEach(column => {
+                const taskExists = column.tasks.some(t => t.id === task.id);
+                if (taskExists) currentColumnId = column.id;
+                const option = document.createElement('option');
+                option.value = column.id;
+                option.textContent = column.title;
+                taskColumnSelect.appendChild(option);
+            });
+            if (currentColumnId) taskColumnSelect.value = currentColumnId;
+            
+            taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
+            fetch('http://localhost:3000/api/users', {
+                headers: { 'x-username': localStorage.getItem('currentUser') }
+            })
+            .then(response => response.json())
+            .then(users => {
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.username;
+                    option.textContent = user.username;
+                    if (task.assignee === user.username) option.selected = true;
+                    taskAssigneeSelect.appendChild(option);
+                });
+            });
+            
+            subtasksList.innerHTML = '';
+            (task.subtasks || []).forEach(subtask => {
+                const subtaskInput = document.createElement('input');
+                subtaskInput.type = 'text';
+                subtaskInput.value = subtask.title;
+                subtaskInput.className = 'w-full px-3 py-1 border border-gray-300 rounded-md mb-2';
+                subtasksList.appendChild(subtaskInput);
+            });
+            
+            deleteTaskBtn.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            taskTitleInput.focus();
+            
+            document.getElementById('addSubtaskBtn').onclick = addSubtaskInput;
+            
+            document.getElementById('saveTask').onclick = function() {
+                const title = taskTitleInput.value.trim();
+                if (!title) return;
+                
+                const description = taskDescriptionInput.value.trim();
+                const assignee = taskAssigneeSelect.value;
+                const selectedColumnId = taskColumnSelect.value;
+                const subtasks = Array.from(subtasksList.children).map(input => ({
+                    title: input.value.trim(),
+                    completed: task.subtasks.find(st => st.title === input.value)?.completed || false
+                })).filter(st => st.title);
+                
+                task.title = title;
+                task.description = description;
+                task.assignee = assignee;
+                task.subtasks = subtasks;
+                
+                if (currentColumnId !== selectedColumnId) {
+                    moveTask(task.id, currentColumnId, selectedColumnId);
+                }
+                
+                saveBoardData();
+                initBoard();
+                updateStats();
+                modal.classList.add('hidden');
+            };
+            
+            deleteTaskBtn.onclick = function() {
+                if (currentColumnId) {
+                    const column = boardData.columns.find(col => col.id === currentColumnId);
+                    if (column) {
+                        const taskIndex = column.tasks.findIndex(t => t.id === task.id);
+                        if (taskIndex !== -1) {
+                            column.tasks.splice(taskIndex, 1);
+                            saveBoardData();
+                            initBoard();
+                            updateStats();
+                        }
+                    }
+                }
+                modal.classList.add('hidden');
+            };
+        }
+
+        function openAddColumnModal() {
+            const modal = document.getElementById('columnModal');
+            const modalTitle = document.getElementById('columnModalTitle');
+            const columnTitleInput = document.getElementById('columnTitle');
+            const columnColorInput = document.getElementById('columnColor');
+            const columnIdInput = document.getElementById('columnId');
+            
+            modalTitle.textContent = 'Ajouter une section';
+            columnTitleInput.value = '';
+            columnColorInput.value = '#4c6ef5';
+            columnIdInput.value = '';
+            document.getElementById('deleteColumn').classList.add('hidden');
+            modal.classList.remove('hidden');
+            columnTitleInput.focus();
+            
+            document.getElementById('saveColumn').onclick = function() {
+                const title = columnTitleInput.value.trim();
+                if (!title) return;
+                const newColumn = { 
+                    id: 'col-' + Date.now(), 
+                    title, 
+                    color: columnColorInput.value, 
+                    tasks: [] 
+                };
+                boardData.columns.push(newColumn);
+                saveBoardData();
+                initBoard();
+                modal.classList.add('hidden');
+            };
+        }
+
+        function openEditColumnModal(column) {
+            const modal = document.getElementById('columnModal');
+            const modalTitle = document.getElementById('columnModalTitle');
+            const columnTitleInput = document.getElementById('columnTitle');
+            const columnColorInput = document.getElementById('columnColor');
+            const columnIdInput = document.getElementById('columnId');
+            const deleteColumnBtn = document.getElementById('deleteColumn');
+            
+            modalTitle.textContent = 'Modifier la section';
+            columnTitleInput.value = column.title;
+            columnColorInput.value = column.color || '#4c6ef5';
+            columnIdInput.value = column.id;
+            deleteColumnBtn.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            columnTitleInput.focus();
+            
+            document.getElementById('saveColumn').onclick = function() {
+                const title = columnTitleInput.value.trim();
+                if (!title) return;
+                column.title = title;
+                column.color = columnColorInput.value;
+                saveBoardData();
+                initBoard();
+                modal.classList.add('hidden');
+            };
+            
+            deleteColumnBtn.onclick = function() {
+                if (column.tasks.length > 0) {
+                    const confirmModal = document.getElementById('confirmDeleteColumnModal');
+                    const columnNameSpan = document.getElementById('columnName');
+                    columnNameSpan.textContent = column.title;
+                    confirmModal.classList.remove('hidden');
+                    
+                    document.getElementById('cancelDeleteColumn').onclick = function() {
+                        confirmModal.classList.add('hidden');
+                    };
+                    
+                    document.getElementById('confirmDeleteColumn').onclick = function() {
+                        const columnIndex = boardData.columns.findIndex(col => col.id === column.id);
+                        if (columnIndex !== -1) {
+                            boardData.columns.splice(columnIndex, 1);
+                            saveBoardData();
+                            initBoard();
+                            updateStats();
+                        }
+                        confirmModal.classList.add('hidden');
+                        modal.classList.add('hidden');
+                    };
+                } else {
+                    const columnIndex = boardData.columns.findIndex(col => col.id === column.id);
+                    if (columnIndex !== -1) {
+                        boardData.columns.splice(columnIndex, 1);
+                        saveBoardData();
+                        initBoard();
+                        updateStats();
+                    }
+                    modal.classList.add('hidden');
+                }
+            };
+        }
+
+        document.getElementById('addColumnBtn').addEventListener('click', openAddColumnModal);
+        document.getElementById('editBoardTitle').addEventListener('click', function() {
+            const modal = document.getElementById('editTitleModal');
+            const titleInput = document.getElementById('newBoardTitle');
+            titleInput.value = boardData.title;
+            modal.classList.remove('hidden');
+            titleInput.focus();
+            document.getElementById('saveBoardTitle').onclick = function() {
+                const title = titleInput.value.trim();
+                if (title) {
+                    boardData.title = title;
+                    document.getElementById('boardTitle').textContent = title;
+                    saveBoardData();
+                }
+                modal.classList.add('hidden');
+            };
+        });
+        
+        document.getElementById('cancelEditTitle').addEventListener('click', function() {
+            document.getElementById('editTitleModal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancelTask').addEventListener('click', function() {
+            document.getElementById('taskModal').classList.add('hidden');
+        });
+        
+        document.getElementById('cancelColumn').addEventListener('click', function() {
+            document.getElementById('columnModal').classList.add('hidden');
+        });
+        
+        document.getElementById('saveAsTemplate').addEventListener('click', function() {
+            const modal = document.getElementById('saveTemplateModal');
+            const templateNameInput = document.getElementById('templateName');
+            templateNameInput.value = boardData.title;
+            modal.classList.remove('hidden');
+            templateNameInput.focus();
+            document.getElementById('saveTemplate').onclick = async function() {
+                const name = templateNameInput.value.trim();
+                if (!name) return;
+                const templateData = JSON.parse(JSON.stringify(boardData));
+                templateData.id = 'template-' + Date.now();
+                templateData.title = name;
+                try {
+                    await fetch('http://localhost:3000/api/templates', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'x-username': localStorage.getItem('currentUser')
+                        },
+                        body: JSON.stringify(templateData)
+                    });
+                    alert(`Template "${name}" enregistré.`);
+                    modal.classList.add('hidden');
+                } catch (error) {
+                    console.error('Erreur lors de la sauvegarde du template:', error);
+                }
+            };
+        });
+        
+        document.getElementById('cancelTemplate').addEventListener('click', function() {
+            document.getElementById('saveTemplateModal').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
