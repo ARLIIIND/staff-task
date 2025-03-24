@@ -6,6 +6,7 @@
     <title>Staff&Task - Connexion</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <style>
         body {
             background-color: #f5f7fa;
@@ -145,7 +146,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         localStorage.setItem('currentUser', data.username);
-        window.location.href = 'projects.html';
+        window.location.href = 'projects';
     } catch (error) {
         showToaster(error.message || 'Erreur lors de la connexion');
     }

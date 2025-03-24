@@ -10,6 +10,8 @@ const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+const onlineUsers = new Set();
+
 
 // MongoDB Connection
 const MONGODB_URI = 'mongodb+srv://blowreed:h6QFs9my0TpKnNzh@staff-task-cluster.vfvjy.mongodb.net/staff-task?retryWrites=true&w=majority';
@@ -67,7 +69,20 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Route pour les pages avec extension .html (compatibilité)
 app.get('/:page.html', (req, res) => {
+  const page = req.params.page;
+  const filePath = path.join(__dirname, 'public', `${page}.html`);
+  
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.redirect('/');
+  }
+});
+
+// Route pour les pages sans extension
+app.get('/:page', (req, res) => {
   const page = req.params.page;
   const filePath = path.join(__dirname, 'public', `${page}.html`);
   
@@ -247,11 +262,30 @@ app.get('/api/users', authMiddleware, async (req, res) => {
     }
 });
 
-// Socket.IO
 io.on('connection', (socket) => {
     console.log('Utilisateur connecté via Socket.IO');
+    
+    // Récupérer le nom d'utilisateur de la requête
+    const username = socket.handshake.query.username;
+    
+    if (username) {
+        // Ajouter l'utilisateur à la liste des utilisateurs en ligne
+        onlineUsers.add(username);
+        
+        // Diffuser la liste mise à jour à tous les clients
+        io.emit('onlineUsers', Array.from(onlineUsers));
+    }
+    
     socket.on('disconnect', () => {
         console.log('Utilisateur déconnecté');
+        
+        // Supprimer l'utilisateur de la liste
+        if (username) {
+            onlineUsers.delete(username);
+            
+            // Diffuser la liste mise à jour
+            io.emit('onlineUsers', Array.from(onlineUsers));
+        }
     });
     
     socket.on('joinProject', (projectId) => {

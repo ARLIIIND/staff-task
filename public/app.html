@@ -286,8 +286,8 @@
                         <h1 class="text-xl font-bold text-indigo-600">Staff&Task</h1>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-0">
-                        <a href="projects.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Projets</a>
-                        <a href="templates.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Templates</a>
+                        <a href="projects" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Projets</a>
+                        <a href="templates" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Templates</a>
                         <a href="#" class="nav-link active border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Workspace</a>                        
                     </div>
                 </div>
@@ -459,6 +459,7 @@
                 const currentUserAvatar = document.getElementById('currentUserAvatar');
                 const firstLetter = currentUser.substring(0, 1).toUpperCase();
                 currentUserAvatar.textContent = firstLetter;
+                currentUserAvatar.title = currentUser;
                 currentUserAvatar.classList.add(`user-${firstLetter}`);
 
             const projectId = localStorage.getItem('currentProject');
@@ -494,19 +495,20 @@
             });
 
             socket.on('onlineUsers', (users) => {
-                const onlineUsersDiv = document.getElementById('onlineUsers');
-                onlineUsersDiv.innerHTML = '';
-                users.forEach(username => {
-                    if (username !== currentUser) {
-                        const avatar = document.createElement('div');
-                        const userFirstLetter = username.substring(0, 1).toUpperCase();
-                        avatar.className = `user-avatar user-${userFirstLetter}`;
-                        avatar.textContent = userFirstLetter;
-                        avatar.title = username; // Ajouter un tooltip
-                        onlineUsersDiv.appendChild(avatar);
-                    }
+                    const onlineUsersDiv = document.getElementById('onlineUsers');
+                    onlineUsersDiv.innerHTML = '';
+                    
+                    users.forEach(username => {
+                        if (username !== currentUser) {
+                            const avatar = document.createElement('div');
+                            const userFirstLetter = username.substring(0, 1).toUpperCase();
+                            avatar.className = `user-avatar user-${userFirstLetter}`;
+                            avatar.textContent = userFirstLetter;
+                            avatar.title = username; // Tooltip
+                            onlineUsersDiv.appendChild(avatar);
+                        }
+                    });
                 });
-            });
             document.getElementById('logoutBtn').addEventListener('click', function() {
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentProject');

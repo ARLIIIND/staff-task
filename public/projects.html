@@ -59,13 +59,32 @@
             background-color: #4c6ef5; /* Couleur par défaut */
         }
 
-            /* Variantes de couleurs pour différents utilisateurs */
-            .user-A { background-color: #4c6ef5; }
-            .user-L { background-color: #4dabf7; }
-            .user-F { background-color: #e64980; }
-            .user-S { background-color: #fab005; }
-            .user-K { background-color: #82c91e; }
-            .user-I { background-color: #be4bdb; }
+        .user-A { background-color: #4c6ef5; }
+        .user-L { background-color: #4dabf7; }
+        .user-F { background-color: #e64980; }
+        .user-S { background-color: #fab005; }
+        .user-K { background-color: #82c91e; }
+        .user-I { background-color: #be4bdb; }
+        .user-T { background-color: #fd7e14; }
+        .user-M { background-color: #20c997; }
+        .user-R { background-color: #fa5252; }
+        .user-B { background-color: #845ef7; }
+        .user-C { background-color: #339af0; }
+        .user-D { background-color: #f06595; }
+        .user-E { background-color: #ff922b; }
+        .user-G { background-color: #51cf66; }
+        .user-H { background-color: #22b8cf; }
+        .user-J { background-color: #aa8a00; }
+        .user-N { background-color: #868e96; }
+        .user-O { background-color: #e67700; }
+        .user-P { background-color: #5f3dc4; }
+        .user-Q { background-color: #c2255c; }
+        .user-U { background-color: #0b7285; }
+        .user-V { background-color: #1098ad; }
+        .user-W { background-color: #9c36b5; }
+        .user-X { background-color: #f03e3e; }
+        .user-Y { background-color: #1864ab; }
+        .user-Z { background-color: #e03131; }
 
     </style>
 </head>
@@ -79,8 +98,8 @@
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-0">
                         <a href="#" class="nav-link active border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Projets</a>
-                        <a href="templates.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Templates</a>
-                        <a href="app.html" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Workspace</a>
+                        <a href="templates" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Templates</a>
+                        <a href="app" class="nav-link border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Workspace</a>
                     </div>
                 </div>
                 <div class="flex items-center">
@@ -142,7 +161,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const currentUser = localStorage.getItem('currentUser');
             if (!currentUser) {
-                window.location.href = 'index.html';
+                window.location.href = 'index';
                 return;
             }
             
@@ -256,7 +275,7 @@
                 document.querySelectorAll('.open-project-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         localStorage.setItem('currentProject', btn.dataset.projectId);
-                        window.location.href = 'app.html';
+                        window.location.href = 'app';
                     });
                 });
 
