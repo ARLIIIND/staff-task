@@ -245,6 +245,34 @@
         .toaster.show {
             opacity: 1;
         }
+
+        /* Variantes de couleurs pour différents utilisateurs */
+        .user-A { background-color: #4c6ef5; }
+        .user-L { background-color: #4dabf7; }
+        .user-F { background-color: #e64980; }
+        .user-S { background-color: #fab005; }
+        .user-K { background-color: #82c91e; }
+        .user-I { background-color: #be4bdb; }
+        .user-T { background-color: #fd7e14; }
+        .user-M { background-color: #20c997; }
+        .user-R { background-color: #fa5252; }
+        .user-B { background-color: #845ef7; }
+        .user-C { background-color: #339af0; }
+        .user-D { background-color: #f06595; }
+        .user-E { background-color: #ff922b; }
+        .user-G { background-color: #51cf66; }
+        .user-H { background-color: #22b8cf; }
+        .user-J { background-color: #aa8a00; }
+        .user-N { background-color: #868e96; }
+        .user-O { background-color: #e67700; }
+        .user-P { background-color: #5f3dc4; }
+        .user-Q { background-color: #c2255c; }
+        .user-U { background-color: #0b7285; }
+        .user-V { background-color: #1098ad; }
+        .user-W { background-color: #9c36b5; }
+        .user-X { background-color: #f03e3e; }
+        .user-Y { background-color: #1864ab; }
+        .user-Z { background-color: #e03131; }
     </style>
 </head>
 
@@ -471,14 +499,14 @@
                 users.forEach(username => {
                     if (username !== currentUser) {
                         const avatar = document.createElement('div');
-                        avatar.className = 'user-avatar bg-indigo-600';
-                        avatar.textContent = username.substring(0, 1);
-                        avatar.title = username;
+                        const userFirstLetter = username.substring(0, 1).toUpperCase();
+                        avatar.className = `user-avatar user-${userFirstLetter}`;
+                        avatar.textContent = userFirstLetter;
+                        avatar.title = username; // Ajouter un tooltip
                         onlineUsersDiv.appendChild(avatar);
                     }
                 });
             });
-
             document.getElementById('logoutBtn').addEventListener('click', function() {
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentProject');
@@ -495,23 +523,23 @@
             return await response.json();
         }
 
-        async function saveBoardData() {
-            const projectId = localStorage.getItem('currentProject');
-            const currentUser = localStorage.getItem('currentUser');
-            try {
-                await fetch(`http://localhost:3000/api/board/${projectId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-username': currentUser
-                    },
-                    body: JSON.stringify(boardData)
-                });
-                socket.emit('boardUpdate', { projectId, board: boardData });
-            } catch (error) {
-                console.error('Erreur lors de la sauvegarde du tableau:', error);
+            async function saveBoardData() {
+                const projectId = localStorage.getItem('currentProject');
+                const currentUser = localStorage.getItem('currentUser');
+                try {
+                    await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, { // Correction ici
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-username': currentUser
+                        },
+                        body: JSON.stringify(boardData)
+                    });
+                    socket.emit('boardUpdate', { projectId, board: boardData });
+                } catch (error) {
+                    console.error('Erreur lors de la sauvegarde du tableau:', error);
+                }
             }
-        }
 
         function initBoard() {
             const boardContainer = document.querySelector('.board-container');
@@ -1261,7 +1289,7 @@
                 templateData.id = 'template-' + Date.now();
                 templateData.title = name;
                 try {
-                    await fetch('http://localhost:3000/api/templates', {
+                    await fetch('https://staff-task.onrender.com/api/templates', {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',

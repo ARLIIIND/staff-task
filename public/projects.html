@@ -6,6 +6,7 @@
     <title>Staff&Task - Projets</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <style>
         body {
             background-color: #f5f7fa;
@@ -149,6 +150,7 @@
             const currentUserAvatar = document.getElementById('currentUserAvatar');
             const firstLetter = currentUser.substring(0, 1).toUpperCase();
             currentUserAvatar.textContent = firstLetter;
+            currentUserAvatar.title = currentUser; // Ajoutez cette ligne
             
             // Ajouter la classe pour le style général de l'avatar
             currentUserAvatar.classList.add('user-avatar');
@@ -156,12 +158,40 @@
             // Ajouter une classe spécifique en fonction de la première lettre
             currentUserAvatar.classList.add(`user-${firstLetter}`);
             
+            // INSÉREZ LE DEUXIÈME BLOC ICI
+            // Connexion à Socket.IO
+            const socket = io('https://staff-task.onrender.com', {
+                query: { username: currentUser }
+            });
+            
+            // Écouter les mises à jour des utilisateurs en ligne
+            socket.on('onlineUsers', (users) => {
+                // Dans la page Projets, vous pouvez montrer les utilisateurs en ligne
+                // Créez d'abord un conteneur pour eux dans le HTML
+                const onlineUsersDiv = document.createElement('div');
+                onlineUsersDiv.id = 'onlineUsers';
+                onlineUsersDiv.className = 'flex space-x-2';
+                document.querySelector('.flex.items-center').insertBefore(onlineUsersDiv, document.getElementById('currentUserAvatar'));
+                
+                // Remplir avec les avatars
+                onlineUsersDiv.innerHTML = '';
+                users.forEach(username => {
+                    if (username !== currentUser) {
+                        const avatar = document.createElement('div');
+                        const userFirstLetter = username.substring(0, 1).toUpperCase();
+                        avatar.className = `user-avatar user-${userFirstLetter}`;
+                        avatar.textContent = userFirstLetter;
+                        avatar.title = username; // Ajouter un tooltip
+                        onlineUsersDiv.appendChild(avatar);
+                    }
+                });
+            });
+            
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentProject');
                 window.location.href = 'index.html';
             });
-
             
             await loadProjects();
 

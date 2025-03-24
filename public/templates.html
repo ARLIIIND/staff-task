@@ -6,6 +6,7 @@
     <title>Staff&Task - Templates</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <style>
         body {
             background-color: #f5f7fa;
@@ -207,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentUserAvatar = document.getElementById('currentUserAvatar');
     const firstLetter = currentUser.substring(0, 1).toUpperCase();
     currentUserAvatar.textContent = firstLetter;
+    currentUserAvatar.title = currentUser; // Ajoutez cette ligne
     
     // Appliquer une couleur en fonction de la première lettre
     currentUserAvatar.classList.add(`user-${firstLetter}`);
@@ -214,6 +216,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Supprimer la génération d'utilisateurs fictifs en ligne
     const onlineUsers = document.getElementById('onlineUsers');
     onlineUsers.innerHTML = ''; // Vider la div des utilisateurs en ligne
+    
+    // INSÉREZ LE PREMIER BLOC ICI
+    // Connexion à Socket.IO
+    const socket = io('https://staff-task.onrender.com', {
+        query: { username: currentUser }
+    });
+
+    // Écouter les mises à jour des utilisateurs en ligne
+    socket.on('onlineUsers', (users) => {
+        const onlineUsersDiv = document.getElementById('onlineUsers');
+        onlineUsersDiv.innerHTML = '';
+        users.forEach(username => {
+            if (username !== currentUser) {
+                const avatar = document.createElement('div');
+                const userFirstLetter = username.substring(0, 1).toUpperCase();
+                avatar.className = `user-avatar user-${userFirstLetter}`;
+                avatar.textContent = userFirstLetter;
+                avatar.title = username; // Ajouter un tooltip
+                onlineUsersDiv.appendChild(avatar);
+            }
+        });
+    });
     
     loadTemplates();
 
