@@ -12,7 +12,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // MongoDB Connection
-const MONGODB_URI = 'mongodb+srv://blowreed:h6QFs9my0TpKnNzh@staff-task-cluster.vfvjy.mongodb.net/?retryWrites=true&w=majority&appName=staff-task-cluster';
+const MONGODB_URI = 'mongodb+srv://blowreed:h6QFs9my0TpKnNzh@staff-task-cluster.vfvjy.mongodb.net/staff-task?retryWrites=true&w=majority';
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connecté à MongoDB Atlas'))
   .catch(err => console.error('Erreur de connexion à MongoDB:', err));
