@@ -421,16 +421,17 @@
             query: { username: localStorage.getItem('currentUser') }
         });
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
+            document.addEventListener('DOMContentLoaded', async function() {
+                const currentUser = localStorage.getItem('currentUser');
+                if (!currentUser) {
+                    window.location.href = 'index.html';
+                    return;
+                }
 
-            const currentUserAvatar = document.getElementById('currentUserAvatar');
-            currentUserAvatar.classList.add('bg-indigo-600');
-            currentUserAvatar.textContent = currentUser.substring(0, 1);
+                const currentUserAvatar = document.getElementById('currentUserAvatar');
+                const firstLetter = currentUser.substring(0, 1).toUpperCase();
+                currentUserAvatar.textContent = firstLetter;
+                currentUserAvatar.classList.add(`user-${firstLetter}`);
 
             const projectId = localStorage.getItem('currentProject');
             if (!projectId) {

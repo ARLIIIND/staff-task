@@ -46,6 +46,26 @@
         .toaster.show {
             opacity: 1;
         }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            background-color: #4c6ef5; /* Couleur par défaut */
+        }
+
+            /* Variantes de couleurs pour différents utilisateurs */
+            .user-A { background-color: #4c6ef5; }
+            .user-L { background-color: #4dabf7; }
+            .user-F { background-color: #e64980; }
+            .user-S { background-color: #fab005; }
+            .user-K { background-color: #82c91e; }
+            .user-I { background-color: #be4bdb; }
+
     </style>
 </head>
 <body>
@@ -124,15 +144,25 @@
                 window.location.href = 'index.html';
                 return;
             }
-
-            document.getElementById('currentUserAvatar').textContent = currentUser.substring(0, 1);
-
+            
+            // Récupérer et styler l'avatar de l'utilisateur
+            const currentUserAvatar = document.getElementById('currentUserAvatar');
+            const firstLetter = currentUser.substring(0, 1).toUpperCase();
+            currentUserAvatar.textContent = firstLetter;
+            
+            // Ajouter la classe pour le style général de l'avatar
+            currentUserAvatar.classList.add('user-avatar');
+            
+            // Ajouter une classe spécifique en fonction de la première lettre
+            currentUserAvatar.classList.add(`user-${firstLetter}`);
+            
             document.getElementById('logoutBtn').addEventListener('click', () => {
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentProject');
                 window.location.href = 'index.html';
             });
 
+            
             await loadProjects();
 
             document.getElementById('addProjectBtn').addEventListener('click', () => {

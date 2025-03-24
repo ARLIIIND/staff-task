@@ -195,42 +195,27 @@
     </div>
 
 <script>
-    const users = [
-        { username: 'Arlind', color: 'user-Arlind' },
-        { username: 'Fatma', color: 'user-Fatma' },
-        { username: 'Lucas', color: 'user-Lucas' },
-        { username: 'Salma', color: 'user-Salma' },
-        { username: 'Khadija', color: 'user-Khadija' },
-        { username: 'Imen', color: 'user-Imen' }
-    ];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const currentUser = localStorage.getItem('currentUser');
-        if (!currentUser) {
-            window.location.href = 'index.html';
-            return;
-        }
 
-        const currentUserAvatar = document.getElementById('currentUserAvatar');
-        const userInfo = users.find(u => u.username === currentUser);
-        if (userInfo) {
-            currentUserAvatar.classList.add(userInfo.color);
-            currentUserAvatar.textContent = currentUser.substring(0, 1);
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-        const onlineUsers = document.getElementById('onlineUsers');
-        const onlineUsersList = users.filter(u => Math.random() > 0.3);
-        onlineUsersList.forEach(user => {
-            if (user.username !== currentUser) {
-                const avatar = document.createElement('div');
-                avatar.className = `user-avatar ${user.color}`;
-                avatar.textContent = user.username.substring(0, 1);
-                avatar.title = user.username;
-                onlineUsers.appendChild(avatar);
-            }
-        });
-
-        loadTemplates();
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
+    const firstLetter = currentUser.substring(0, 1).toUpperCase();
+    currentUserAvatar.textContent = firstLetter;
+    
+    // Appliquer une couleur en fonction de la première lettre
+    currentUserAvatar.classList.add(`user-${firstLetter}`);
+    
+    // Supprimer la génération d'utilisateurs fictifs en ligne
+    const onlineUsers = document.getElementById('onlineUsers');
+    onlineUsers.innerHTML = ''; // Vider la div des utilisateurs en ligne
+    
+    loadTemplates();
 
         document.getElementById('logoutBtn').addEventListener('click', function() {
             localStorage.removeItem('currentUser');
