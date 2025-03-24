@@ -36,8 +36,8 @@ const Project = mongoose.model('Project', projectSchema);
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
+    origin: ['https://staff-task.onrender.com', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'x-username']
 }));
 
@@ -267,7 +267,7 @@ io.on('connection', (socket) => {
 // Function pour garder le serveur actif (auto-ping)
 function keepAlive() {
     setInterval(() => {
-        http.get(`http://localhost:${PORT}/ping`, (res) => {
+        http.get(`https://staff-task.onrender.com/ping`, (res) => {
             console.log(`Auto-ping effectué, statut: ${res.statusCode}`);
         }).on('error', (err) => {
             console.error(`Erreur d'auto-ping: ${err.message}`);

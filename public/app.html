@@ -417,7 +417,7 @@
 
     <script>
         let boardData = null;
-        const socket = io('http://localhost:3000', {
+            const socket = io('https://staff-task.onrender.com', {
             query: { username: localStorage.getItem('currentUser') }
         });
 
@@ -440,7 +440,7 @@
 
             try {
                 // Vérifier l'accès au projet
-                const response = await fetch(`http://localhost:3000/api/board/${projectId}`, {
+                    const response = await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
                     headers: { 'x-username': currentUser }
                 });
                 if (!response.ok) throw new Error((await response.json()).error);
@@ -487,7 +487,7 @@
 
         async function loadBoardData(projectId) {
             const currentUser = localStorage.getItem('currentUser');
-            const response = await fetch(`http://localhost:3000/api/board/${projectId}`, {
+            const response = await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
                 headers: { 'x-username': currentUser }
             });
             if (!response.ok) throw new Error((await response.json()).error);
@@ -963,7 +963,7 @@
             });
             
             taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
-            fetch('http://localhost:3000/api/users', {
+                fetch('https://staff-task.onrender.com/api/users', {
                 headers: { 'x-username': localStorage.getItem('currentUser') }
             })
             .then(response => response.json())
@@ -1052,7 +1052,7 @@
             if (currentColumnId) taskColumnSelect.value = currentColumnId;
             
             taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
-            fetch('http://localhost:3000/api/users', {
+                fetch('https://staff-task.onrender.com/api/users', {
                 headers: { 'x-username': localStorage.getItem('currentUser') }
             })
             .then(response => response.json())
