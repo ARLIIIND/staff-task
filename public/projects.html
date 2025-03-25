@@ -158,61 +158,45 @@
             setTimeout(() => toaster.classList.remove('show'), 3000);
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) {
-                window.location.href = 'index';
-                return;
-            }
-            
-            // Récupérer et styler l'avatar de l'utilisateur
-            const currentUserAvatar = document.getElementById('currentUserAvatar');
-            const firstLetter = currentUser.substring(0, 1).toUpperCase();
-            currentUserAvatar.textContent = firstLetter;
-            currentUserAvatar.title = currentUser; // Ajoutez cette ligne
-            
-            // Ajouter la classe pour le style général de l'avatar
-            currentUserAvatar.classList.add('user-avatar');
-            
-            // Ajouter une classe spécifique en fonction de la première lettre
-            currentUserAvatar.classList.add(`user-${firstLetter}`);
-            
-            // INSÉREZ LE DEUXIÈME BLOC ICI
-            // Connexion à Socket.IO
-            const socket = io('https://staff-task.onrender.com', {
-                query: { username: currentUser }
-            });
-            
-            // Écouter les mises à jour des utilisateurs en ligne
-            socket.on('onlineUsers', (users) => {
-                // Dans la page Projets, vous pouvez montrer les utilisateurs en ligne
-                // Créez d'abord un conteneur pour eux dans le HTML
-                const onlineUsersDiv = document.createElement('div');
-                onlineUsersDiv.id = 'onlineUsers';
-                onlineUsersDiv.className = 'flex space-x-2';
-                document.querySelector('.flex.items-center').insertBefore(onlineUsersDiv, document.getElementById('currentUserAvatar'));
-                
-                // Remplir avec les avatars
-                onlineUsersDiv.innerHTML = '';
-                users.forEach(username => {
-                    if (username !== currentUser) {
-                        const avatar = document.createElement('div');
-                        const userFirstLetter = username.substring(0, 1).toUpperCase();
-                        avatar.className = `user-avatar user-${userFirstLetter}`;
-                        avatar.textContent = userFirstLetter;
-                        avatar.title = username; // Ajouter un tooltip
-                        onlineUsersDiv.appendChild(avatar);
-                    }
-                });
-            });
-            
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('currentProject');
-                window.location.href = 'index.html';
-            });
-            
-            await loadProjects();
+document.addEventListener('DOMContentLoaded', async () => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+        window.location.href = 'index';
+        return;
+    }
+    
+    // Récupérer et styler l'avatar de l'utilisateur
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
+    const firstLetter = currentUser.substring(0, 1).toUpperCase();
+    currentUserAvatar.textContent = firstLetter;
+    currentUserAvatar.title = currentUser;
+    
+    // Ajouter la classe pour le style général de l'avatar
+    currentUserAvatar.classList.add('user-avatar');
+    
+    // Ajouter une classe spécifique en fonction de la première lettre
+    currentUserAvatar.classList.add(`user-${firstLetter}`);
+    
+    // Connexion à Socket.IO - Simplifiée car pas besoin d'afficher les utilisateurs dans la page projets
+    const socket = io('https://staff-task.onrender.com', {
+        query: { username: currentUser }
+    });
+    
+    // Supprimer l'écouteur onlineUsers puisque nous ne voulons pas afficher les utilisateurs sur cette page
+    // Vider le conteneur des utilisateurs en ligne s'il existe déjà
+    const existingOnlineUsers = document.getElementById('onlineUsers');
+    if (existingOnlineUsers) {
+        existingOnlineUsers.innerHTML = '';
+    }
+    
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentProject');
+        window.location.href = 'index';
+    });
+    
+    await loadProjects();
+});
 
             document.getElementById('addProjectBtn').addEventListener('click', () => {
                 document.getElementById('addProjectModal').classList.remove('hidden');

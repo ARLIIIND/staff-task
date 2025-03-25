@@ -217,18 +217,17 @@
 
 <script>
 
-
 document.addEventListener('DOMContentLoaded', function() {
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) {
         window.location.href = 'index';
         return;
     }
-
+    
     const currentUserAvatar = document.getElementById('currentUserAvatar');
     const firstLetter = currentUser.substring(0, 1).toUpperCase();
     currentUserAvatar.textContent = firstLetter;
-    currentUserAvatar.title = currentUser; // Ajoutez cette ligne
+    currentUserAvatar.title = currentUser;
     
     // Appliquer une couleur en fonction de la première lettre
     currentUserAvatar.classList.add(`user-${firstLetter}`);
@@ -237,36 +236,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const onlineUsers = document.getElementById('onlineUsers');
     onlineUsers.innerHTML = ''; // Vider la div des utilisateurs en ligne
     
-const socket = io('https://staff-task.onrender.com', {
-    query: { username: currentUser }
-});
-
-// Écouteur pour les mises à jour des utilisateurs en ligne
-socket.on('onlineUsers', (users) => {
-    const onlineUsersDiv = document.getElementById('onlineUsers');
-    onlineUsersDiv.innerHTML = ''; // Vider le conteneur
+    // Connexion à Socket.IO - Simplifiée car pas besoin d'afficher les utilisateurs dans la page templates
+    const socket = io('https://staff-task.onrender.com', {
+        query: { username: currentUser }
+    });
     
-    users.forEach(username => {
-        if (username !== currentUser) {
-            const avatar = document.createElement('div');
-            const userFirstLetter = username.substring(0, 1).toUpperCase();
-            avatar.className = `user-avatar user-${userFirstLetter}`;
-            avatar.textContent = userFirstLetter;
-            avatar.title = username; // Tooltip
-            onlineUsersDiv.appendChild(avatar);
-        }
-    });
-});
-
+    // Nous n'avons plus besoin d'écouter les événements onlineUsers sur cette page
+    
     loadTemplates();
-
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
-        });
-
-        initCreateTemplateModal();
+    
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'index';
     });
+    
+    initCreateTemplateModal();
+});
 
     async function loadTemplates() {
         const templatesGrid = document.getElementById('templatesGrid');

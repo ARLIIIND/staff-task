@@ -11,6 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 const onlineUsers = new Set();
+const projectUsers = {}; // Stockage des utilisateurs par projet
 
 
 // MongoDB Connection
@@ -264,35 +265,63 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 
 io.on('connection', (socket) => {
     console.log('Utilisateur connecté via Socket.IO');
-    
-    // Récupérer le nom d'utilisateur de la requête
+    let currentProject = null;
     const username = socket.handshake.query.username;
     
-    if (username) {
-        // Ajouter l'utilisateur à la liste des utilisateurs en ligne
-        onlineUsers.add(username);
-        
-        // Diffuser la liste mise à jour à tous les clients
-        io.emit('onlineUsers', Array.from(onlineUsers));
-    }
-    
-    socket.on('disconnect', () => {
-        console.log('Utilisateur déconnecté');
-        
-        // Supprimer l'utilisateur de la liste
-        if (username) {
-            onlineUsers.delete(username);
+    // Quand un utilisateur rejoint un projet
+    socket.on('joinProject', (projectId) => {
+        // Si l'utilisateur était déjà dans un projet, le quitter
+        if (currentProject && projectUsers[currentProject]) {
+            projectUsers[currentProject] = projectUsers[currentProject].filter(user => user !== username);
             
-            // Diffuser la liste mise à jour
-            io.emit('onlineUsers', Array.from(onlineUsers));
+            // Informer les autres utilisateurs qu'il a quitté
+            io.to(currentProject).emit('projectUsers', projectUsers[currentProject]);
+        }
+        
+        // Rejoindre le nouveau projet
+        socket.join(projectId);
+        currentProject = projectId;
+        
+        // Initialiser le tableau d'utilisateurs si nécessaire
+        if (!projectUsers[projectId]) {
+            projectUsers[projectId] = [];
+        }
+        
+        // Ajouter l'utilisateur s'il n'est pas déjà présent
+        if (!projectUsers[projectId].includes(username)) {
+            projectUsers[projectId].push(username);
+        }
+        
+        // Informer tous les membres du projet des utilisateurs actuellement connectés
+        io.to(projectId).emit('projectUsers', projectUsers[projectId]);
+        
+        console.log(`Utilisateur ${username} a rejoint le projet ${projectId}`);
+    });
+    
+    // Quand un utilisateur se déconnecte
+    socket.on('disconnect', () => {
+        console.log(`Utilisateur ${username} déconnecté`);
+        
+        // Si l'utilisateur était dans un projet, le retirer de la liste
+        if (currentProject && projectUsers[currentProject]) {
+            projectUsers[currentProject] = projectUsers[currentProject].filter(user => user !== username);
+            
+            // Informer les autres utilisateurs
+            io.to(currentProject).emit('projectUsers', projectUsers[currentProject]);
         }
     });
     
-    socket.on('joinProject', (projectId) => {
-        socket.join(projectId);
-        console.log(`Utilisateur a rejoint le projet ${projectId}`);
+    // Quand un utilisateur quitte explicitement un projet
+    socket.on('leaveProject', (projectId) => {
+        if (projectUsers[projectId]) {
+            projectUsers[projectId] = projectUsers[projectId].filter(user => user !== username);
+            socket.leave(projectId);
+            io.to(projectId).emit('projectUsers', projectUsers[projectId]);
+            currentProject = null;
+        }
     });
     
+    // Pour les mises à jour du tableau
     socket.on('boardUpdate', (data) => {
         socket.to(data.projectId).emit('boardUpdate', data);
     });

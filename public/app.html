@@ -444,77 +444,93 @@
     </div>
 
     <script>
-        let boardData = null;
-            const socket = io('https://staff-task.onrender.com', {
-            query: { username: localStorage.getItem('currentUser') }
+
+        
+let boardData = null;
+const socket = io('https://staff-task.onrender.com', {
+    query: { username: localStorage.getItem('currentUser') }
+});
+
+document.addEventListener('DOMContentLoaded', async function() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+        window.location.href = 'index';
+        return;
+    }
+
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
+    const firstLetter = currentUser.substring(0, 1).toUpperCase();
+    currentUserAvatar.textContent = firstLetter;
+    currentUserAvatar.title = currentUser;
+    currentUserAvatar.classList.add(`user-${firstLetter}`);
+
+    const projectId = localStorage.getItem('currentProject');
+    if (!projectId) {
+        window.location.href = 'projects';
+        return;
+    }
+
+    try {
+        // Quand vous quittez la page, informez le serveur
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leaveProject', projectId);
         });
 
-            document.addEventListener('DOMContentLoaded', async function() {
-                const currentUser = localStorage.getItem('currentUser');
-                if (!currentUser) {
-                    window.location.href = 'index.html';
-                    return;
-                }
+        // Rejoindre le projet
+        socket.emit('joinProject', projectId);
 
-                const currentUserAvatar = document.getElementById('currentUserAvatar');
-                const firstLetter = currentUser.substring(0, 1).toUpperCase();
-                currentUserAvatar.textContent = firstLetter;
-                currentUserAvatar.title = currentUser;
-                currentUserAvatar.classList.add(`user-${firstLetter}`);
+        // Vérifier l'accès au projet
+        const response = await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
+            headers: { 'x-username': currentUser }
+        });
+        
+        if (!response.ok) throw new Error((await response.json()).error);
+        boardData = await response.json();
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors du chargement du tableau');
+        window.location.href = 'projects';
+        return;
+    }
 
-            const projectId = localStorage.getItem('currentProject');
-            if (!projectId) {
-                window.location.href = 'projects.html';
-                return;
-            }
+    initBoard();
+    updateStats();
+    initColumnDragAndDrop();
 
-            try {
-                // Vérifier l'accès au projet
-                    const response = await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
-                    headers: { 'x-username': currentUser }
-                });
-                if (!response.ok) throw new Error((await response.json()).error);
-                boardData = await response.json();
-            } catch (error) {
-                showToaster(error.message || 'Erreur lors du chargement du tableau');
-                window.location.href = 'projects.html';
-                return;
-            }
-
+    // Écouter les mises à jour du tableau
+    socket.on('boardUpdate', (data) => {
+        if (data.projectId === projectId) {
+            boardData = data.board;
             initBoard();
             updateStats();
-            initColumnDragAndDrop();
+        }
+    });
 
-            socket.emit('joinProject', projectId);
-            socket.on('boardUpdate', (data) => {
-                if (data.projectId === projectId) {
-                    boardData = data.board;
-                    initBoard();
-                    updateStats();
-                }
-            });
-
-            socket.on('onlineUsers', (users) => {
-                    const onlineUsersDiv = document.getElementById('onlineUsers');
-                    onlineUsersDiv.innerHTML = '';
-                    
-                    users.forEach(username => {
-                        if (username !== currentUser) {
-                            const avatar = document.createElement('div');
-                            const userFirstLetter = username.substring(0, 1).toUpperCase();
-                            avatar.className = `user-avatar user-${userFirstLetter}`;
-                            avatar.textContent = userFirstLetter;
-                            avatar.title = username; // Tooltip
-                            onlineUsersDiv.appendChild(avatar);
-                        }
-                    });
-                });
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('currentProject');
-                window.location.href = 'index.html';
-            });
+    // Remplacer onlineUsers par projectUsers
+    socket.on('projectUsers', (users) => {
+        const onlineUsersDiv = document.getElementById('onlineUsers');
+        onlineUsersDiv.innerHTML = '';
+        
+        users.forEach(username => {
+            if (username !== currentUser) {
+                const avatar = document.createElement('div');
+                const userFirstLetter = username.substring(0, 1).toUpperCase();
+                avatar.className = `user-avatar user-${userFirstLetter}`;
+                avatar.textContent = userFirstLetter;
+                avatar.title = username; // Tooltip
+                onlineUsersDiv.appendChild(avatar);
+            }
         });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        // Informer le serveur que l'utilisateur quitte
+        socket.emit('leaveProject', projectId);
+        
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentProject');
+        window.location.href = 'index';
+    });
+});
 
         async function loadBoardData(projectId) {
             const currentUser = localStorage.getItem('currentUser');
