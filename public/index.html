@@ -18,17 +18,6 @@
             align-items: center;
             margin: 0;
         }
-
-        .forgot-password-link {
-            font-size: 0.875rem; /* Taille plus petite (équivalent à text-sm) */
-            font-style: italic;
-            color: #4c6ef5;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .forgot-password-link:hover {
-            color: #3b82f6;
-        }
         .login-container {
             background-color: white;
             padding: 2rem;
@@ -53,37 +42,27 @@
         .toaster.show {
             opacity: 1;
         }
-        .tab-active {
-            border-bottom: 2px solid #4c6ef5;
-            color: #4c6ef5;
-        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h1 class="text-2xl font-bold text-indigo-600 mb-6 text-center">Staff&Task</h1>
         
-        <!-- Onglets de navigation -->
-        <div class="mb-6 flex border-b">
-            <button id="loginTab" class="flex-1 py-2 text-center tab-active">Connexion</button>
-            <button id="registerTab" class="flex-1 py-2 text-center">Inscription</button>
-        </div>
-        
-            <!-- Formulaire de connexion -->
-            <div id="loginForm">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
-                    <input type="text" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                    <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p class="mt-2">
-                        <span id="forgotPasswordLink" class="forgot-password-link">Mot de passe oublié ?</span>
-                    </p>
-                </div>
-                <button id="loginBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Se connecter</button>
+        <!-- Formulaire de connexion -->
+        <div id="loginForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                <input type="text" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button id="loginBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Se connecter</button>
+            <p class="mt-2 text-sm text-center text-gray-600">
+                Pas de compte ? <a href="#" id="showRegister" class="text-indigo-600 hover:text-indigo-800">S'inscrire</a>
+            </p>
+        </div>
 
         <!-- Formulaire d'inscription -->
         <div id="registerForm" class="hidden">
@@ -91,26 +70,13 @@
                 <label class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
                 <input type="text" id="regUsername" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="regEmail" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
                 <input type="password" id="regPassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
             <button id="registerBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">S'inscrire</button>
-        </div>
-        
-        <!-- Formulaire de mot de passe oublié -->
-        <div id="forgotPasswordForm" class="hidden">
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="forgotEmail" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <button id="resetPasswordBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Réinitialiser le mot de passe</button>
-            <p class="mt-4 text-sm text-gray-500 text-center">
-                Un email avec les instructions de réinitialisation vous sera envoyé.
+            <p class="mt-2 text-sm text-center text-gray-600">
+                Déjà un compte ? <a href="#" id="showLogin" class="text-indigo-600 hover:text-indigo-800">Se connecter</a>
             </p>
         </div>
     </div>
@@ -118,128 +84,74 @@
     <div id="toaster" class="toaster"></div>
 
     <script>
-        function showToaster(message, isSuccess = false) {
+        function showToaster(message) {
             const toaster = document.getElementById('toaster');
             toaster.textContent = message;
-            toaster.style.backgroundColor = isSuccess ? '#10b981' : '#f87171';
             toaster.classList.add('show');
             setTimeout(() => toaster.classList.remove('show'), 3000);
         }
 
-        // Gestion des onglets
-// Gestion des onglets (inchangé)
-        document.getElementById('loginTab').addEventListener('click', () => {
-            document.getElementById('loginTab').classList.add('tab-active');
-            document.getElementById('registerTab').classList.remove('tab-active');
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('registerForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-        });
-
-        document.getElementById('registerTab').addEventListener('click', () => {
-            document.getElementById('registerTab').classList.add('tab-active');
-            document.getElementById('loginTab').classList.remove('tab-active');
+        // Toggle entre connexion et inscription
+        document.getElementById('showRegister').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('registerForm').classList.remove('hidden');
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
         });
 
-        // Gestion du clic sur "Mot de passe oublié ?"
-        document.getElementById('forgotPasswordLink').addEventListener('click', () => {
-            document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('showLogin').addEventListener('click', (e) => {
+            e.preventDefault();
             document.getElementById('registerForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.remove('hidden');
-            document.getElementById('loginTab').classList.remove('tab-active');
-            document.getElementById('registerTab').classList.remove('tab-active');
+            document.getElementById('loginForm').classList.remove('hidden');
         });
 
-        // Gestion de l'inscription
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const username = document.getElementById('regUsername').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value.trim();
-            
-            if (!username || !email || !password) {
-                showToaster('Veuillez remplir tous les champs');
-                return;
-            }
+// Gestion de l'inscription
+document.getElementById('registerBtn').addEventListener('click', async () => {
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+    if (!username || !password) {
+        showToaster('Veuillez remplir tous les champs');
+        return;
+    }
 
-            // Validation simple de l'email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showToaster('Format d\'email invalide');
-                return;
-            }
-
-            try {
-                const response = await fetch('https://staff-task.onrender.com/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
-                });
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.error);
-                
-                showToaster('Inscription réussie, connectez-vous !', true);
-                document.getElementById('loginTab').click();
-                document.getElementById('username').value = username;
-            } catch (error) {
-                showToaster(error.message || 'Erreur lors de l\'inscription');
-            }
+    try {
+            const response = await fetch('https://staff-task.onrender.com/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
         });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        showToaster('Inscription réussie, connectez-vous !');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors de l’inscription');
+    }
+});
 
-        // Gestion de la connexion
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            
-            if (!username || !password) {
-                showToaster('Veuillez remplir tous les champs');
-                return;
-            }
+// Gestion de la connexion
+document.getElementById('loginBtn').addEventListener('click', async () => {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    if (!username || !password) {
+        showToaster('Veuillez remplir tous les champs');
+        return;
+    }
 
-            try {
-                const response = await fetch('https://staff-task.onrender.com/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.error);
-                
-                localStorage.setItem('currentUser', data.username);
-                window.location.href = 'projects';
-            } catch (error) {
-                showToaster(error.message || 'Erreur lors de la connexion');
-            }
+    try {
+            const response = await fetch('https://staff-task.onrender.com/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
         });
-
-        // Gestion de la réinitialisation de mot de passe
-        document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
-            const email = document.getElementById('forgotEmail').value.trim();
-            
-            if (!email) {
-                showToaster('Veuillez entrer votre email');
-                return;
-            }
-
-            try {
-                const response = await fetch('https://staff-task.onrender.com/api/forgot-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.error);
-                
-                showToaster(data.message, true);
-            } catch (error) {
-                showToaster(error.message || 'Erreur lors de la demande de réinitialisation');
-            }
-        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        localStorage.setItem('currentUser', data.username);
+        window.location.href = 'projects';
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors de la connexion');
+    }
+});
     </script>
 </body>
 </html>
