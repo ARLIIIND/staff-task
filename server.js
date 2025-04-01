@@ -57,18 +57,14 @@ function getUserColor(letter) {
   return colors[letter] || '#4c6ef5'; // Couleur par défaut si la lettre n'est pas trouvée
 }
 
-// Ajout de nodemailer pour les emails de réinitialisation de mot de passe
-const nodemailer = require('nodemailer');
+const mailjet = require('node-mailjet').apiConnect(
+  process.env.MJ_APIKEY_PUBLIC || 'votre-api-key',
+  process.env.MJ_APIKEY_PRIVATE || 'votre-secret-key'
+);
+
 const crypto = require('crypto');
 
-// Configuration du transporteur d'email (à remplacer par vos données SMTP)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'votre-email@gmail.com',
-    pass: process.env.EMAIL_PASS || 'votre-mot-de-passe'
-  }
-});
+
 
 const projectSchema = new mongoose.Schema({
   id: { type: String, unique: true, required: true },
@@ -195,19 +191,32 @@ app.post('/api/forgot-password', async (req, res) => {
     user.resetTokenExpires = resetTokenExpires;
     await user.save();
 
-    // Envoi de l'email de réinitialisation
+    // Envoi de l'email de réinitialisation avec Mailjet
     const resetLink = `${req.headers.origin}/reset-password?token=${resetToken}`;
-    const mailOptions = {
-      to: user.email,
-      from: process.env.EMAIL_USER || 'votre-email@gmail.com',
-      subject: 'Réinitialisation de mot de passe Staff&Task',
-      text: `Vous recevez cet email car vous (ou quelqu'un d'autre) avez demandé la réinitialisation du mot de passe de votre compte.\n\n
-        Veuillez cliquer sur le lien suivant, ou le coller dans votre navigateur pour terminer le processus:\n\n
-        ${resetLink}\n\n
-        Si vous n'avez pas demandé cela, veuillez ignorer cet email et votre mot de passe restera inchangé.\n`
-    };
-
-    await transporter.sendMail(mailOptions);
+    
+    const request = mailjet.post("send", { version: "v3.1" }).request({
+      Messages: [
+        {
+          From: {
+            Email: "staffntask@gmail.com",
+            Name: "Staff&Task"
+          },
+          To: [
+            {
+              Email: user.email,
+              Name: user.username
+            }
+          ],
+          Subject: "Réinitialisation de mot de passe Staff&Task",
+          TextPart: `Vous recevez cet email car vous (ou quelqu'un d'autre) avez demandé la réinitialisation du mot de passe de votre compte.
+            Veuillez cliquer sur le lien suivant, ou le coller dans votre navigateur pour terminer le processus:
+            ${resetLink}
+            Si vous n'avez pas demandé cela, veuillez ignorer cet email et votre mot de passe restera inchangé.`
+        }
+      ]
+    });
+    
+    await request;
     res.json({ message: 'Un email de réinitialisation a été envoyé à ' + user.email });
   } catch (error) {
     console.error('Erreur lors de la demande de réinitialisation:', error);
