@@ -144,21 +144,14 @@
                     <div id="onlineUsers" class="flex space-x-2">
                         <!-- Les utilisateurs en ligne seront affichés ici -->
                     </div>
-                        <div class="ml-3 relative">
-                            <div id="currentUserAvatar" class="user-avatar cursor-pointer"></div>
-                            <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden z-50">
-                                <a href="#" id="profileBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-user mr-2"></i> Mon profil
-                                </a>
-                                <a href="#" id="settingsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-cog mr-2"></i> Paramètres
-                                </a>
-                                <hr class="my-1">
-                                <a href="#" id="logoutMenuBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
-                                </a>
-                            </div>
+                    <div class="ml-3 relative">
+                        <div id="currentUserAvatar" class="user-avatar cursor-pointer">
+                            <!-- Initiales de l'utilisateur actuel -->
                         </div>
+                    </div>
+                    <button id="logoutBtn" class="ml-4 px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -178,63 +171,6 @@
             <!-- Les templates seront générés ici dynamiquement -->
         </div>
     </main>
-
-    <div id="profileModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-96">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Mon profil</h3>
-        
-        <div class="flex items-center justify-center mb-4">
-            <div id="profileAvatar" class="user-avatar w-20 h-20 text-2xl"></div>
-        </div>
-        
-        <div class="mt-4 mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
-            <input type="text" id="profileUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        
-        <div class="mt-4 mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Couleur de l'avatar</label>
-            <input type="color" id="profileAvatarColor" class="w-full h-10 border border-gray-300 rounded-md">
-        </div>
-        
-        <div class="flex justify-end space-x-3">
-            <button id="cancelProfile" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
-            <button id="saveProfile" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de paramètres utilisateur -->
-<div id="settingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-96">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Paramètres</h3>
-        
-        <div class="mt-4 mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" id="settingsEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        
-        <div class="mt-4 mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-            <input type="password" id="settingsCurrentPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        
-        <div class="mt-4 mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-            <input type="password" id="settingsNewPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <p class="text-xs text-gray-500 mt-1">Laisser vide pour conserver le mot de passe actuel</p>
-        </div>
-        
-        <div class="flex justify-end space-x-3">
-            <button id="cancelSettings" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
-            <button id="saveSettings" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
-        </div>
-    </div>
-</div>
-
-<!-- Ajout d'un toaster si pas déjà présent -->
-<div id="toaster" class="toaster"></div>
-
 
     <!-- Modal pour créer un template -->
     <div id="createTemplateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
@@ -282,199 +218,8 @@
 
 <script>
 
-    // Gestion du menu utilisateur
-document.getElementById('currentUserAvatar').addEventListener('click', function() {
-    document.getElementById('userMenu').classList.toggle('hidden');
-});
-
-// Fermer le menu quand on clique ailleurs
-document.addEventListener('click', function(e) {
-    if (!document.getElementById('currentUserAvatar').contains(e.target) && 
-        !document.getElementById('userMenu').contains(e.target)) {
-        document.getElementById('userMenu').classList.add('hidden');
-    }
-});
-
-// Liens du menu utilisateur
-document.getElementById('profileBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    openProfileModal();
-});
-
-document.getElementById('settingsBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    openSettingsModal();
-});
-
-document.getElementById('logoutMenuBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    logout();
-});
-
-async function openProfileModal() {
-    document.getElementById('userMenu').classList.add('hidden');
-    
-    try {
-        const response = await fetch('https://staff-task.onrender.com/api/profile', {
-            headers: { 'x-username': localStorage.getItem('currentUser') }
-        });
-        
-        if (!response.ok) throw new Error('Erreur lors du chargement du profil');
-        
-        const userData = await response.json();
-        
-        document.getElementById('profileUsername').value = userData.username;
-        document.getElementById('profileAvatarColor').value = userData.avatarColor || '#4c6ef5';
-        
-        const profileAvatar = document.getElementById('profileAvatar');
-        profileAvatar.textContent = userData.username.charAt(0).toUpperCase();
-        profileAvatar.style.backgroundColor = userData.avatarColor || '#4c6ef5';
-        
-        document.getElementById('profileModal').classList.remove('hidden');
-    } catch (error) {
-        showToaster(error.message || 'Erreur lors du chargement du profil');
-    }
-}
-
-// Fonction pour ouvrir la modal de paramètres
-async function openSettingsModal() {
-    document.getElementById('userMenu').classList.add('hidden');
-    
-    try {
-        const response = await fetch('https://staff-task.onrender.com/api/profile', {
-            headers: { 'x-username': localStorage.getItem('currentUser') }
-        });
-        
-        if (!response.ok) throw new Error('Erreur lors du chargement des paramètres');
-        
-        const userData = await response.json();
-        
-        document.getElementById('settingsEmail').value = userData.email || '';
-        document.getElementById('settingsCurrentPassword').value = '';
-        document.getElementById('settingsNewPassword').value = '';
-        
-        document.getElementById('settingsModal').classList.remove('hidden');
-    } catch (error) {
-        showToaster(error.message || 'Erreur lors du chargement des paramètres');
-    }
-}
-
-// Gestion du formulaire de profil
-document.getElementById('saveProfile').addEventListener('click', async function() {
-    const username = document.getElementById('profileUsername').value.trim();
-    const avatarColor = document.getElementById('profileAvatarColor').value;
-    
-    if (!username) {
-        showToaster('Le nom d\'utilisateur ne peut pas être vide');
-        return;
-    }
-    
-    try {
-        const response = await fetch('https://staff-task.onrender.com/api/profile', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-username': localStorage.getItem('currentUser')
-            },
-            body: JSON.stringify({ username, avatarColor })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.error);
-        
-        // Si le nom d'utilisateur a changé, mise à jour du localStorage
-        if (username !== localStorage.getItem('currentUser')) {
-            localStorage.setItem('currentUser', username);
-        }
-        
-        // Mise à jour de l'avatar dans l'interface
-        const userAvatar = document.getElementById('currentUserAvatar');
-        userAvatar.textContent = username.charAt(0).toUpperCase();
-        userAvatar.style.backgroundColor = avatarColor;
-        
-        document.getElementById('profileModal').classList.add('hidden');
-        showToaster('Profil mis à jour avec succès', true);
-        
-        // Recharger la page pour que les changements soient appliqués partout
-        setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-        showToaster(error.message || 'Erreur lors de la mise à jour du profil');
-    }
-});
-
-// Gestion du formulaire de paramètres
-document.getElementById('saveSettings').addEventListener('click', async function() {
-    const email = document.getElementById('settingsEmail').value.trim();
-    const currentPassword = document.getElementById('settingsCurrentPassword').value;
-    const newPassword = document.getElementById('settingsNewPassword').value;
-    
-    if (!email) {
-        showToaster('L\'email ne peut pas être vide');
-        return;
-    }
-    
-    if (newPassword && !currentPassword) {
-        showToaster('Veuillez entrer votre mot de passe actuel');
-        return;
-    }
-    
-    try {
-        const response = await fetch('https://staff-task.onrender.com/api/settings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-username': localStorage.getItem('currentUser')
-            },
-            body: JSON.stringify({ 
-                email, 
-                currentPassword: currentPassword || undefined,
-                newPassword: newPassword || undefined
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.error);
-        
-        document.getElementById('settingsModal').classList.add('hidden');
-        showToaster('Paramètres mis à jour avec succès', true);
-    } catch (error) {
-        showToaster(error.message || 'Erreur lors de la mise à jour des paramètres');
-    }
-});
-
-// Annulation des modals
-document.getElementById('cancelProfile').addEventListener('click', function() {
-    document.getElementById('profileModal').classList.add('hidden');
-});
-
-document.getElementById('cancelSettings').addEventListener('click', function() {
-    document.getElementById('settingsModal').classList.add('hidden');
-});
-
-// Fonction de déconnexion
-function logout() {
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('currentProject');
-    window.location.href = 'index';
-}
-
-// Fonction améliorée de toaster
-function showToaster(message, isSuccess = false) {
-    const toaster = document.getElementById('toaster');
-    if (!toaster) return;
-    
-    toaster.textContent = message;
-    toaster.style.backgroundColor = isSuccess ? '#10b981' : '#f87171';
-    toaster.classList.add('show');
-    setTimeout(() => toaster.classList.remove('show'), 3000);
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const currentUser = localStorage.getItem('currentUser');
-    initCreateTemplateModal();
-    loadTemplates();
     if (!currentUser) {
         window.location.href = 'index';
         return;
@@ -509,223 +254,34 @@ document.addEventListener('DOMContentLoaded', function() {
     initCreateTemplateModal();
 });
 
-async function loadTemplates() {
-    const templatesGrid = document.getElementById('templatesGrid');
-    templatesGrid.innerHTML = '';
-
-    try {
-        const response = await fetch('https://staff-task.onrender.com/api/templates', {
-            headers: { 'x-username': localStorage.getItem('currentUser') }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Erreur lors du chargement des templates');
-        }
-        
-        const templates = await response.json();
-
-        if (templates.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.className = 'col-span-full text-center py-12';
-            emptyMessage.innerHTML = `
-                <div class="text-gray-400 mb-4"><i class="fas fa-clipboard-list text-4xl"></i></div>
-                <h3 class="text-lg font-medium text-gray-700 mb-1">Aucun template</h3>
-                <p class="text-gray-500">Créez votre premier template pour commencer</p>
-            `;
-            templatesGrid.appendChild(emptyMessage);
-            return;
-        }
-
-        templates.forEach((template, index) => {
-            // Vérifier que les colonnes existent et contiennent des tâches
-            if (!template.columns || !Array.isArray(template.columns)) {
-                template.columns = [];
-            }
-            
-            template.columns.forEach(column => {
-                if (!column.tasks || !Array.isArray(column.tasks)) {
-                    column.tasks = [];
-                }
-            });
-            
-            const templateCard = createTemplateCard(template, index);
-            templatesGrid.appendChild(templateCard);
-        });
-    } catch (error) {
-        console.error('Erreur lors du chargement des templates:', error);
-        showToaster(error.message || 'Erreur lors du chargement des templates');
-    }
-}
-
-function initCreateTemplateModal() {
-    document.getElementById('addSectionBtn').addEventListener('click', function() {
-        const templateSections = document.getElementById('templateSections');
-        const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'flex items-center';
-        sectionDiv.innerHTML = `
-            <input type="text" placeholder="Titre de la section" class="template-section w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button class="remove-section ml-2 text-red-500 hover:text-red-700 px-2" type="button">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        templateSections.appendChild(sectionDiv);
-
-        sectionDiv.querySelector('.remove-section').addEventListener('click', function() {
-            sectionDiv.remove();
-        });
-    });
-
-       // S'assurer que le gestionnaire d'événements est ajouté au premier bouton de suppression
-    const firstRemoveBtn = document.querySelector('.remove-section');
-    if (firstRemoveBtn) {
-        firstRemoveBtn.addEventListener('click', function() {
-            this.closest('.flex').remove();
-        });
-    }
-
-    document.getElementById('createTemplateBtn').addEventListener('click', function() {
-        document.getElementById('createTemplateModal').classList.remove('hidden');
-    });
-
-    document.getElementById('cancelCreateTemplate').addEventListener('click', function() {
-        document.getElementById('createTemplateModal').classList.add('hidden');
-    });
-
-    document.getElementById('saveNewTemplate').addEventListener('click', async function() {
-        const templateTitle = document.getElementById('templateTitle').value.trim();
-        if (!templateTitle) {
-            showToaster('Veuillez entrer un titre pour le template.');
-            return;
-        }
-
-        const sectionInputs = document.querySelectorAll('.template-section');
-        const sections = [];
-
-        let hasEmptySection = false;
-        sectionInputs.forEach(input => {
-            const title = input.value.trim();
-            if (!title) {
-                hasEmptySection = true;
-                return;
-            }
-            sections.push({
-                id: 'col-' + Date.now() + '-' + sections.length,
-                title: title,
-                color: '#4c6ef5',
-                tasks: []
-            });
-        });
-
-        if (hasEmptySection) {
-            showToaster('Veuillez remplir toutes les sections ou supprimer les sections vides.');
-            return;
-        }
-
-        if (sections.length === 0) {
-            showToaster('Veuillez ajouter au moins une section.');
-            return;
-        }
-
-        const newTemplate = {
-            title: templateTitle,
-            columns: sections,
-            isTemplate: true
-        };
+    async function loadTemplates() {
+        const templatesGrid = document.getElementById('templatesGrid');
+        templatesGrid.innerHTML = '';
 
         try {
-            const response = await fetch('https://staff-task.onrender.com/api/templates', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-username': localStorage.getItem('currentUser')
-                },
-                body: JSON.stringify(newTemplate)
+            const response = await fetch('https://staff-task.onrender.com/api/templates');
+            const templates = await response.json();
+
+            if (templates.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'col-span-full text-center py-12';
+                emptyMessage.innerHTML = `
+                    <div class="text-gray-400 mb-4"><i class="fas fa-clipboard-list text-4xl"></i></div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-1">Aucun template</h3>
+                    <p class="text-gray-500">Créez votre premier template pour commencer</p>
+                `;
+                templatesGrid.appendChild(emptyMessage);
+                return;
+            }
+
+            templates.forEach((template, index) => {
+                const templateCard = createTemplateCard(template, index);
+                templatesGrid.appendChild(templateCard);
             });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Erreur lors de la création du template');
-            }
-            
-            await loadTemplates();
-            document.getElementById('createTemplateModal').classList.add('hidden');
-            showToaster('Template créé avec succès', true);
-
-            document.getElementById('templateTitle').value = '';
-            document.getElementById('templateSections').innerHTML = `
-                <div class="flex items-center">
-                    <input type="text" placeholder="Titre de la section" class="template-section w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button class="remove-section ml-2 text-red-500 hover:text-red-700 px-2" type="button">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            const newRemoveBtn = document.querySelector('.remove-section');
-            if (newRemoveBtn) {
-                newRemoveBtn.addEventListener('click', function() {
-                    this.closest('.flex').remove();
-                });
-            }
         } catch (error) {
-            console.error('Erreur lors de la création du template:', error);
-            showToaster(error.message || 'Erreur lors de la création du template');
+            console.error('Erreur lors du chargement des templates:', error);
         }
-    });
-}
-
-async function useTemplate(template) {
-    try {
-        // Créer un nouveau projet basé sur le template
-        const projectResponse = await fetch('https://staff-task.onrender.com/api/projects', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-username': localStorage.getItem('currentUser')
-            },
-            body: JSON.stringify({
-                title: template.title
-            })
-        });
-        
-        if (!projectResponse.ok) {
-            const errorData = await projectResponse.json();
-            throw new Error(errorData.error || 'Erreur lors de la création du projet');
-        }
-        
-        const project = await projectResponse.json();
-        
-        // Mettre à jour le tableau du projet avec les colonnes du template
-        const boardData = {
-            title: template.title,
-            columns: template.columns || []
-        };
-        
-        const boardResponse = await fetch(`https://staff-task.onrender.com/api/board/${project.id}`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-username': localStorage.getItem('currentUser')
-            },
-            body: JSON.stringify(boardData)
-        });
-        
-        if (!boardResponse.ok) {
-            const errorData = await boardResponse.json();
-            throw new Error(errorData.error || 'Erreur lors de la configuration du tableau');
-        }
-        
-        // Rediriger vers le nouveau projet
-        localStorage.setItem('currentProject', project.id);
-        showToaster('Template appliqué avec succès, redirection...', true);
-        setTimeout(() => {
-            window.location.href = 'app';
-        }, 1500);
-    } catch (error) {
-        console.error('Erreur lors de l\'utilisation du template:', error);
-        showToaster(error.message || 'Erreur lors de l\'utilisation du template');
     }
-}
 
     function createTemplateCard(template, index) {
         const card = document.createElement('div');
