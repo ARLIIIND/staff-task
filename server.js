@@ -23,7 +23,51 @@ mongoose.connect(MONGODB_URI)
 // Définition des schémas et modèles
 const userSchema = new mongoose.Schema({
   username: { type: String, unique: true, required: true },
-  password: { type: String, required: true }
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  avatar: { 
+    type: String, 
+    default: null 
+  },
+  avatarColor: { 
+    type: String, 
+    default: function() {
+      // Couleur par défaut basée sur la première lettre du nom d'utilisateur
+      const firstLetter = this.username.charAt(0).toUpperCase();
+      return getUserColor(firstLetter);
+    }
+  },
+  resetToken: { type: String, default: null },
+  resetTokenExpires: { type: Date, default: null }
+});
+
+
+// Fonction pour générer une couleur d'avatar basée sur la première lettre
+function getUserColor(letter) {
+  const colors = {
+    'A': '#4c6ef5', 'B': '#845ef7', 'C': '#339af0', 'D': '#f06595',
+    'E': '#ff922b', 'F': '#e64980', 'G': '#51cf66', 'H': '#22b8cf',
+    'I': '#be4bdb', 'J': '#aa8a00', 'K': '#82c91e', 'L': '#4dabf7',
+    'M': '#20c997', 'N': '#868e96', 'O': '#e67700', 'P': '#5f3dc4',
+    'Q': '#c2255c', 'R': '#fa5252', 'S': '#fab005', 'T': '#fd7e14',
+    'U': '#0b7285', 'V': '#1098ad', 'W': '#9c36b5', 'X': '#f03e3e',
+    'Y': '#1864ab', 'Z': '#e03131'
+  };
+  
+  return colors[letter] || '#4c6ef5'; // Couleur par défaut si la lettre n'est pas trouvée
+}
+
+// Ajout de nodemailer pour les emails de réinitialisation de mot de passe
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
+// Configuration du transporteur d'email (à remplacer par vos données SMTP)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'votre-email@gmail.com',
+    pass: process.env.EMAIL_PASS || 'votre-mot-de-passe'
+  }
 });
 
 const projectSchema = new mongoose.Schema({
@@ -95,23 +139,214 @@ app.get('/:page', (req, res) => {
 });
 
 // Routes API
+
+// Modifier la route d'inscription pour inclure l'email
 app.post('/api/register', async (req, res) => {
-    console.log('Requête /api/register reçue:', req.body);
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Champ manquant' });
-    
-    try {
-        const existingUser = await User.findOne({ username });
-        if (existingUser) return res.status(400).json({ error: 'Utilisateur déjà existant' });
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ username, password: hashedPassword });
-        
-        res.status(201).json({ message: 'Utilisateur créé' });
-    } catch (error) {
-        console.error('Erreur lors de l\'inscription:', error);
-        res.status(500).json({ error: 'Erreur lors de l\'inscription' });
+  console.log('Requête /api/register reçue:', req.body);
+  const { username, email, password } = req.body;
+  if (!username || !password || !email) return res.status(400).json({ error: 'Champ manquant' });
+
+  // Validation de l'email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return res.status(400).json({ error: 'Email invalide' });
+  
+  try {
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      if (existingUser.username === username) {
+        return res.status(400).json({ error: 'Nom d\'utilisateur déjà utilisé' });
+      } else {
+        return res.status(400).json({ error: 'Email déjà utilisé' });
+      }
     }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const avatarColor = getUserColor(username.charAt(0).toUpperCase());
+    
+    await User.create({ 
+      username, 
+      email,
+      password: hashedPassword,
+      avatarColor
+    });
+    
+    res.status(201).json({ message: 'Utilisateur créé' });
+  } catch (error) {
+    console.error('Erreur lors de l\'inscription:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'inscription' });
+  }
+});
+
+// Route pour la demande de réinitialisation de mot de passe
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email manquant' });
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    // Génération du token de réinitialisation
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 heure
+
+    // Mise à jour de l'utilisateur avec le token
+    user.resetToken = resetToken;
+    user.resetTokenExpires = resetTokenExpires;
+    await user.save();
+
+    // Envoi de l'email de réinitialisation
+    const resetLink = `${req.headers.origin}/reset-password?token=${resetToken}`;
+    const mailOptions = {
+      to: user.email,
+      from: process.env.EMAIL_USER || 'votre-email@gmail.com',
+      subject: 'Réinitialisation de mot de passe Staff&Task',
+      text: `Vous recevez cet email car vous (ou quelqu'un d'autre) avez demandé la réinitialisation du mot de passe de votre compte.\n\n
+        Veuillez cliquer sur le lien suivant, ou le coller dans votre navigateur pour terminer le processus:\n\n
+        ${resetLink}\n\n
+        Si vous n'avez pas demandé cela, veuillez ignorer cet email et votre mot de passe restera inchangé.\n`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: 'Un email de réinitialisation a été envoyé à ' + user.email });
+  } catch (error) {
+    console.error('Erreur lors de la demande de réinitialisation:', error);
+    res.status(500).json({ error: 'Erreur lors de la demande de réinitialisation' });
+  }
+});
+
+// Route pour réinitialiser le mot de passe avec le token
+app.post('/api/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Données manquantes' });
+
+  try {
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) return res.status(400).json({ error: 'Token invalide ou expiré' });
+
+    // Mise à jour du mot de passe
+    user.password = await bcrypt.hash(password, 10);
+    user.resetToken = null;
+    user.resetTokenExpires = null;
+    await user.save();
+
+    res.json({ message: 'Mot de passe réinitialisé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+    res.status(500).json({ error: 'Erreur lors de la réinitialisation du mot de passe' });
+  }
+});
+
+// Route pour mettre à jour le profil utilisateur
+app.post('/api/profile', authMiddleware, async (req, res) => {
+  const { username, avatarColor, avatar } = req.body;
+  
+  try {
+    const user = await User.findOne({ username: req.user });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    // Mettre à jour uniquement les champs fournis
+    if (username && username !== user.username) {
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) return res.status(400).json({ error: 'Nom d\'utilisateur déjà utilisé' });
+      user.username = username;
+    }
+    
+    if (avatarColor) user.avatarColor = avatarColor;
+    if (avatar !== undefined) user.avatar = avatar;
+    
+    await user.save();
+    
+    res.json({ 
+      message: 'Profil mis à jour avec succès',
+      user: {
+        username: user.username,
+        email: user.email,
+        avatarColor: user.avatarColor,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du profil:', error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du profil' });
+  }
+});
+
+// Route pour mettre à jour les paramètres utilisateur (email et mot de passe)
+app.post('/api/settings', authMiddleware, async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+  
+  try {
+    const user = await User.findOne({ username: req.user });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    // Vérifier le mot de passe actuel si on souhaite le modifier
+    if (newPassword) {
+      if (!currentPassword) return res.status(400).json({ error: 'Mot de passe actuel manquant' });
+      
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
+      
+      user.password = await bcrypt.hash(newPassword, 10);
+    }
+    
+    // Mettre à jour l'email si fourni
+    if (email && email !== user.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) return res.status(400).json({ error: 'Email invalide' });
+      
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) return res.status(400).json({ error: 'Email déjà utilisé' });
+      
+      user.email = email;
+    }
+    
+    await user.save();
+    
+    res.json({ 
+      message: 'Paramètres mis à jour avec succès',
+      user: {
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des paramètres:', error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour des paramètres' });
+  }
+});
+
+// Route pour obtenir les informations du profil utilisateur
+app.get('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.user });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    
+    res.json({
+      username: user.username,
+      email: user.email,
+      avatarColor: user.avatarColor,
+      avatar: user.avatar
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération du profil:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Augmenter la route d'informations utilisateurs pour inclure les couleurs et avatars
+app.get('/api/users', authMiddleware, async (req, res) => {
+  try {
+    const users = await User.find({}, 'username avatarColor avatar');
+    res.json(users);
+  } catch (error) {
+    console.error('Erreur lors du chargement des utilisateurs:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 app.post('/api/login', async (req, res) => {

@@ -333,6 +333,106 @@
             </div>
         </div>
 
+
+        <!-- Ajout du menu utilisateur et bouton de filtrage des tâches -->
+<div class="py-4 flex justify-between items-center">
+    <div class="flex items-center">
+        <h2 id="boardTitle" class="text-2xl font-bold text-gray-800 mr-2">Tableau principal</h2>
+        <button id="editBoardTitle" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-edit"></i>
+        </button>
+    </div>
+    <div class="flex space-x-3 items-center">
+        <!-- Toggle pour filtrer les tâches personnelles -->
+        <label class="inline-flex items-center cursor-pointer">
+            <span class="mr-2 text-sm font-medium text-gray-700">Mes tâches uniquement</span>
+            <div class="relative">
+                <input type="checkbox" id="showMyTasksOnly" class="sr-only">
+                <div class="w-10 h-5 bg-gray-200 rounded-full"></div>
+                <div class="dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform"></div>
+            </div>
+        </label>
+        
+        <button id="saveAsTemplate" class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors">
+            <i class="far fa-save mr-1"></i> Enregistrer comme template
+        </button>
+        <button id="addColumnBtn" class="add-column flex items-center px-4 py-2 bg-white rounded-md shadow-sm hover:bg-gray-50 text-gray-700">
+            <i class="fas fa-plus mr-2"></i> Ajouter une section
+        </button>
+    </div>
+</div>
+
+<!-- Menu utilisateur pour l'avatar -->
+<div class="relative">
+    <div id="currentUserAvatar" class="user-avatar cursor-pointer"></div>
+    <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden z-50">
+        <a href="#" id="profileBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <i class="fas fa-user mr-2"></i> Mon profil
+        </a>
+        <a href="#" id="settingsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <i class="fas fa-cog mr-2"></i> Paramètres
+        </a>
+        <hr class="my-1">
+        <a href="#" id="logoutMenuBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+        </a>
+    </div>
+</div>
+
+<!-- Modal de profil utilisateur -->
+<div id="profileModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Mon profil</h3>
+        
+        <div class="flex items-center justify-center mb-4">
+            <div id="profileAvatar" class="user-avatar w-20 h-20 text-2xl"></div>
+        </div>
+        
+        <div class="mt-4 mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
+            <input type="text" id="profileUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mt-4 mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Couleur de l'avatar</label>
+            <input type="color" id="profileAvatarColor" class="w-full h-10 border border-gray-300 rounded-md">
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button id="cancelProfile" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+            <button id="saveProfile" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de paramètres utilisateur -->
+<div id="settingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Paramètres</h3>
+        
+        <div class="mt-4 mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="settingsEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mt-4 mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
+            <input type="password" id="settingsCurrentPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mt-4 mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+            <input type="password" id="settingsNewPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <p class="text-xs text-gray-500 mt-1">Laisser vide pour conserver le mot de passe actuel</p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button id="cancelSettings" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+            <button id="saveSettings" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
         <!-- Panneau des statistiques -->
         <div class="stats-panel">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Statistiques</h3>
@@ -445,6 +545,596 @@
     </div>
 
     <script>
+
+// Script de gestion du menu utilisateur et des modals profil/paramètres
+function initializeUserMenu() {
+    // Gestion du menu utilisateur
+    document.getElementById('currentUserAvatar').addEventListener('click', function() {
+        document.getElementById('userMenu').classList.toggle('hidden');
+    });
+    
+    // Fermer le menu quand on clique ailleurs
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('currentUserAvatar').contains(e.target) && 
+            !document.getElementById('userMenu').contains(e.target)) {
+            document.getElementById('userMenu').classList.add('hidden');
+        }
+    });
+    
+    // Liens du menu utilisateur
+    document.getElementById('profileBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        openProfileModal();
+    });
+    
+    document.getElementById('settingsBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        openSettingsModal();
+    });
+    
+    document.getElementById('logoutMenuBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+    });
+}
+
+// Toggle switch style
+document.getElementById('showMyTasksOnly').addEventListener('change', function() {
+    const dot = document.querySelector('.dot');
+    if (this.checked) {
+        dot.classList.add('transform', 'translate-x-5');
+        dot.parentElement.querySelector('div:not(.dot)').classList.remove('bg-gray-200');
+        dot.parentElement.querySelector('div:not(.dot)').classList.add('bg-indigo-600');
+        filterMyTasks(true);
+    } else {
+        dot.classList.remove('transform', 'translate-x-5');
+        dot.parentElement.querySelector('div:not(.dot)').classList.remove('bg-indigo-600');
+        dot.parentElement.querySelector('div:not(.dot)').classList.add('bg-gray-200');
+        filterMyTasks(false);
+    }
+});
+
+// Fonction pour filtrer les tâches par utilisateur assigné
+function filterMyTasks(showOnlyMine) {
+    const currentUser = localStorage.getItem('currentUser');
+    const taskCards = document.querySelectorAll('.task-card');
+    
+    taskCards.forEach(taskCard => {
+        const taskId = taskCard.dataset.id;
+        const task = findTaskById(taskId);
+        
+        if (showOnlyMine) {
+            // Si on montre uniquement mes tâches
+            if (task && task.assignee === currentUser) {
+                taskCard.style.display = '';
+            } else {
+                taskCard.style.display = 'none';
+            }
+        } else {
+            // Si on montre toutes les tâches
+            taskCard.style.display = '';
+        }
+    });
+}
+
+// Fonction pour ouvrir la modal de profil
+async function openProfileModal() {
+    document.getElementById('userMenu').classList.add('hidden');
+    
+    try {
+        const response = await fetch('https://staff-task.onrender.com/api/profile', {
+            headers: { 'x-username': localStorage.getItem('currentUser') }
+        });
+        
+        if (!response.ok) throw new Error('Erreur lors du chargement du profil');
+        
+        const userData = await response.json();
+        
+        document.getElementById('profileUsername').value = userData.username;
+        document.getElementById('profileAvatarColor').value = userData.avatarColor || '#4c6ef5';
+        
+        const profileAvatar = document.getElementById('profileAvatar');
+        profileAvatar.textContent = userData.username.charAt(0).toUpperCase();
+        profileAvatar.style.backgroundColor = userData.avatarColor || '#4c6ef5';
+        
+        document.getElementById('profileModal').classList.remove('hidden');
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors du chargement du profil');
+    }
+}
+
+// Fonction pour ouvrir la modal de paramètres
+async function openSettingsModal() {
+    document.getElementById('userMenu').classList.add('hidden');
+    
+    try {
+        const response = await fetch('https://staff-task.onrender.com/api/profile', {
+            headers: { 'x-username': localStorage.getItem('currentUser') }
+        });
+        
+        if (!response.ok) throw new Error('Erreur lors du chargement des paramètres');
+        
+        const userData = await response.json();
+        
+        document.getElementById('settingsEmail').value = userData.email || '';
+        document.getElementById('settingsCurrentPassword').value = '';
+        document.getElementById('settingsNewPassword').value = '';
+        
+        document.getElementById('settingsModal').classList.remove('hidden');
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors du chargement des paramètres');
+    }
+}
+
+// Modification de la fonction initBoard pour intégrer les avatars des utilisateurs
+function initBoard() {
+    const boardContainer = document.querySelector('.board-container');
+    boardContainer.innerHTML = '';
+    document.getElementById('boardTitle').textContent = boardData.title;
+    
+    boardData.columns.forEach(column => {
+        const columnElement = createColumnElement(column);
+        boardContainer.appendChild(columnElement);
+    });
+    
+    initDragAndDrop();
+    initMultiSelect();
+    initColumnDragAndDrop();
+    
+    // Mettre à jour les avatars pour les tâches assignées
+    updateTaskAvatars();
+}
+
+// Fonction pour mettre à jour les avatars des tâches
+async function updateTaskAvatars() {
+    try {
+        const response = await fetch('https://staff-task.onrender.com/api/users', {
+            headers: { 'x-username': localStorage.getItem('currentUser') }
+        });
+        
+        if (!response.ok) throw new Error('Erreur lors du chargement des utilisateurs');
+        
+        const users = await response.json();
+        const usersMap = new Map();
+        
+        // Créer une carte des utilisateurs pour un accès rapide
+        users.forEach(user => {
+            usersMap.set(user.username, {
+                avatarColor: user.avatarColor,
+                avatar: user.avatar
+            });
+        });
+        
+        // Mettre à jour les avatars des tâches
+        document.querySelectorAll('.task-assignee').forEach(assigneeElement => {
+            const taskElement = assigneeElement.closest('.task-card');
+            const taskId = taskElement.dataset.id;
+            const task = findTaskById(taskId);
+            
+            if (task && task.assignee) {
+                const userInfo = usersMap.get(task.assignee);
+                if (userInfo) {
+                    assigneeElement.style.backgroundColor = userInfo.avatarColor || '#4c6ef5';
+                    assigneeElement.textContent = task.assignee.charAt(0).toUpperCase();
+                    assigneeElement.title = task.assignee; // Ajouter un tooltip
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour des avatars:', error);
+    }
+}
+
+// Modification de la fonction createTaskElement pour améliorer l'affichage des avatars
+function createTaskElement(task) {
+    const taskElement = document.createElement('div');
+    taskElement.className = 'task-card p-3 mb-2 rounded shadow-sm new-card';
+    taskElement.dataset.id = task.id;
+    
+    const taskTitle = document.createElement('div');
+    taskTitle.className = 'font-medium text-gray-800 mb-1';
+    taskTitle.textContent = task.title;
+    
+    if (task.assignee) {
+        const assigneeContainer = document.createElement('div');
+        assigneeContainer.className = 'task-assignee-container';
+        
+        const assignee = document.createElement('div');
+        assignee.className = 'task-assignee';
+        assignee.textContent = task.assignee.substring(0, 1).toUpperCase();
+        assignee.title = task.assignee; // Ajouter un tooltip
+        
+        const currentUser = localStorage.getItem('currentUser');
+        const hasIncompleteSubtasks = task.subtasks && task.subtasks.some(st => !st.completed);
+        const canComplete = task.assignee === currentUser && !hasIncompleteSubtasks;
+        
+        const checkBtn = document.createElement('div');
+        checkBtn.className = `check-btn ${!canComplete ? 'disabled' : ''}`;
+        checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+        if (canComplete) {
+            checkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
+                const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
+                moveTask(task.id, sourceColumnId, targetColumnId);
+                saveBoardData();
+                initBoard();
+                updateStats();
+            });
+        }
+        
+        assigneeContainer.appendChild(assignee);
+        assigneeContainer.appendChild(checkBtn);
+        taskElement.appendChild(assigneeContainer);
+    }
+    
+    const taskDescription = document.createElement('div');
+    taskDescription.className = 'text-sm text-gray-600';
+    taskDescription.textContent = task.description || '';
+    
+    taskElement.appendChild(taskTitle);
+    if (task.description) taskElement.appendChild(taskDescription);
+    
+    // Code pour les sous-tâches...
+    if (task.subtasks && task.subtasks.length > 0) {
+        const subtasksContainer = document.createElement('div');
+        subtasksContainer.className = 'mt-2 subtasks-container';
+        subtasksContainer.dataset.taskId = task.id;
+        
+        task.subtasks.forEach((subtask, index) => {
+            const subtaskElement = document.createElement('div');
+            subtaskElement.className = `subtask ${subtask.completed ? 'completed' : ''} ${index > 1 ? 'subtask-hidden' : ''}`;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = subtask.completed;
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                subtask.completed = e.target.checked;
+                subtaskElement.classList.toggle('completed', subtask.completed);
+                saveBoardData();
+                updateStats();
+                const hasIncompleteSubtasks = task.subtasks.some(st => !st.completed);
+                const checkBtn = taskElement.querySelector('.check-btn');
+                if (checkBtn) {
+                    checkBtn.classList.toggle('disabled', hasIncompleteSubtasks);
+                    if (!hasIncompleteSubtasks && task.assignee === localStorage.getItem('currentUser')) {
+                        checkBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
+                            const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
+                            moveTask(task.id, sourceColumnId, targetColumnId);
+                            saveBoardData();
+                            initBoard();
+                            updateStats();
+                        });
+                    }
+                }
+            });
+            subtaskElement.appendChild(checkbox);
+            const subtaskText = document.createElement('span');
+            subtaskText.textContent = ` ${subtask.title}`;
+            subtaskElement.appendChild(subtaskText);
+            subtasksContainer.appendChild(subtaskElement);
+        });
+        
+        if (task.subtasks.length > 2) {
+            const toggleButton = document.createElement('div');
+            toggleButton.className = 'toggle-subtasks';
+            toggleButton.textContent = 'Voir plus';
+            toggleButton.dataset.expanded = 'false';
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isExpanded = toggleButton.dataset.expanded === 'true';
+                const subtasks = subtasksContainer.querySelectorAll('.subtask');
+                subtasks.forEach((subtask, index) => {
+                    if (index > 1) {
+                        if (isExpanded) {
+                            subtask.classList.add('subtask-hidden');
+                        } else {
+                            subtask.classList.remove('subtask-hidden');
+                        }
+                    }
+                });
+                toggleButton.textContent = isExpanded ? 'Voir plus' : 'Voir moins';
+                toggleButton.dataset.expanded = !isExpanded;
+            });
+            subtasksContainer.appendChild(toggleButton);
+        }
+        
+        taskElement.appendChild(subtasksContainer);
+    }
+    
+    taskElement.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            taskElement.classList.toggle('selected');
+        } else if (!e.target.closest('.subtask input') && !e.target.closest('.check-btn')) {
+            openEditTaskModal(task);
+        }
+    });
+    
+    return taskElement;
+}
+
+// Modification pour améliorer la mise en page des statistiques
+function updateStats() {
+    const teamProgressContainer = document.getElementById('teamProgress');
+    const statsContainer = document.getElementById('userStats');
+    teamProgressContainer.innerHTML = '';
+    statsContainer.innerHTML = '';
+    
+    const userStats = {};
+    boardData.columns.forEach(column => {
+        column.tasks.forEach(task => {
+            if (task.assignee) {
+                if (!userStats[task.assignee]) {
+                    userStats[task.assignee] = { tasks: [], totalTasks: 0, taskProgressSum: 0 };
+                }
+                const userStat = userStats[task.assignee];
+                userStat.tasks.push({ task, column: column.title });
+                userStat.totalTasks++;
+                
+                let taskProgress = 0;
+                const finalColumnId = boardData.columns[boardData.columns.length - 1].id;
+                const isInFinalColumn = column.id === finalColumnId;
+                
+                if (task.subtasks && task.subtasks.length > 0) {
+                    const completedSubtasks = task.subtasks.filter(st => st.completed).length;
+                    taskProgress = (completedSubtasks / task.subtasks.length) * 75;
+                    if (isInFinalColumn && task.subtasks.every(st => st.completed)) {
+                        taskProgress = 100;
+                    }
+                } else {
+                    taskProgress = isInFinalColumn ? 100 : 0;
+                }
+                
+                userStat.taskProgressSum += taskProgress;
+            }
+        });
+    });
+    
+    let totalProgress = 0;
+    let usersWithTasks = 0;
+    for (const username in userStats) {
+        const stat = userStats[username];
+        if (stat.totalTasks > 0) {
+            const userProgress = (stat.taskProgressSum / stat.totalTasks);
+            totalProgress += userProgress;
+            usersWithTasks++;
+        }
+    }
+    
+    const teamProgress = usersWithTasks > 0 ? totalProgress / usersWithTasks : 0;
+    teamProgressContainer.innerHTML = `<h4 class="font-medium text-gray-700 mb-2">Avancée de l'équipe</h4>`;
+    teamProgressContainer.innerHTML += `<div class="text-base font-semibold text-gray-600 mb-1">${teamProgress.toFixed(0)}%</div>`;
+    const teamProgressBar = document.createElement('div');
+    teamProgressBar.className = 'stats-progress mb-2';
+    const teamProgressFill = document.createElement('div');
+    teamProgressFill.className = 'stats-progress-bar global';
+    teamProgressFill.style.width = `${teamProgress}%`;
+    teamProgressBar.appendChild(teamProgressFill);
+    teamProgressContainer.appendChild(teamProgressBar);
+    
+    const separator = document.createElement('hr');
+    separator.className = 'my-3 border-gray-200';
+    teamProgressContainer.appendChild(separator);
+    
+    // Création d'une fonction pour récupérer les couleurs des utilisateurs
+    async function getUserColors() {
+        try {
+            const response = await fetch('https://staff-task.onrender.com/api/users', {
+                headers: { 'x-username': localStorage.getItem('currentUser') }
+            });
+            
+            if (!response.ok) throw new Error('Erreur lors du chargement des utilisateurs');
+            
+            const users = await response.json();
+            const usersMap = new Map();
+            
+            users.forEach(user => {
+                usersMap.set(user.username, {
+                    avatarColor: user.avatarColor || '#4c6ef5'
+                });
+            });
+            
+            return usersMap;
+        } catch (error) {
+            console.error('Erreur lors du chargement des utilisateurs:', error);
+            return new Map();
+        }
+    }
+    
+    // Utilisation d'une fonction asynchrone pour la mise à jour des statistiques
+    async function updateUserStats() {
+        const usersMap = await getUserColors();
+        
+        for (const username in userStats) {
+            const stat = userStats[username];
+            if (stat.totalTasks > 0) {
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'mb-6 p-4 bg-white rounded-lg shadow-sm';
+                
+                // Créer l'en-tête avec avatar et nom d'utilisateur
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'flex items-center mb-2';
+                
+                const userAvatar = document.createElement('div');
+                userAvatar.className = 'user-avatar mr-2';
+                userAvatar.textContent = username.charAt(0).toUpperCase();
+                userAvatar.style.backgroundColor = usersMap.get(username)?.avatarColor || '#4c6ef5';
+                headerDiv.appendChild(userAvatar);
+                
+                const userName = document.createElement('h4');
+                userName.className = 'font-medium text-gray-800';
+                userName.textContent = username;
+                headerDiv.appendChild(userName);
+                
+                statsDiv.appendChild(headerDiv);
+                
+                const globalProgress = (stat.taskProgressSum / stat.totalTasks);
+                statsDiv.innerHTML += `<div class="text-base font-semibold text-gray-600 mb-1">Avancement global - ${globalProgress.toFixed(0)}%</div>`;
+                const globalProgressBar = document.createElement('div');
+                globalProgressBar.className = 'stats-progress mb-4';
+                const globalProgressFill = document.createElement('div');
+                globalProgressFill.className = 'stats-progress-bar';
+                globalProgressFill.style.width = `${globalProgress}%`;
+                globalProgressBar.appendChild(globalProgressFill);
+                statsDiv.appendChild(globalProgressBar);
+                
+                const tasksDiv = document.createElement('div');
+                tasksDiv.className = 'space-y-2';
+                
+                stat.tasks.forEach(({ task, column }) => {
+                    let taskProgress = 0;
+                    const finalColumnId = boardData.columns[boardData.columns.length - 1].id;
+                    const isInFinalColumn = column === boardData.columns.find(col => col.id === finalColumnId).title;
+                    
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        const completedSubtasks = task.subtasks.filter(st => st.completed).length;
+                        taskProgress = (completedSubtasks / task.subtasks.length) * 75;
+                        if (isInFinalColumn && task.subtasks.every(st => st.completed)) {
+                            taskProgress = 100;
+                        }
+                    } else {
+                        taskProgress = isInFinalColumn ? 100 : 0;
+                    }
+                    
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'p-2 bg-gray-50 rounded';
+                    
+                    const taskHeader = document.createElement('div');
+                    taskHeader.className = 'flex justify-between items-center mb-1';
+                    
+                    const taskTitle = document.createElement('div');
+                    taskTitle.className = 'text-sm font-medium text-gray-700';
+                    taskTitle.textContent = task.title;
+                    taskHeader.appendChild(taskTitle);
+                    
+                    const taskInfo = document.createElement('div');
+                    taskInfo.className = 'text-xs text-gray-500';
+                    taskInfo.textContent = `${column} - ${taskProgress.toFixed(0)}%`;
+                    taskHeader.appendChild(taskInfo);
+                    
+                    taskDiv.appendChild(taskHeader);
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'stats-progress';
+                    const progressFill = document.createElement('div');
+                    progressFill.className = 'stats-progress-bar';
+                    progressFill.style.width = `${taskProgress}%`;
+                    progressBar.appendChild(progressFill);
+                    taskDiv.appendChild(progressBar);
+                    
+                    tasksDiv.appendChild(taskDiv);
+                });
+                
+                statsDiv.appendChild(tasksDiv);
+                statsContainer.appendChild(statsDiv);
+            }
+        }
+    }
+    
+    // Appeler la fonction de mise à jour
+    updateUserStats();
+}
+
+// Initialisation des événements pour le profil et les paramètres
+document.addEventListener('DOMContentLoaded', function() {
+    initializeUserMenu();
+    
+    // Gestion du formulaire de profil
+    document.getElementById('saveProfile').addEventListener('click', async function() {
+        const username = document.getElementById('profileUsername').value.trim();
+        const avatarColor = document.getElementById('profileAvatarColor').value;
+        
+        if (!username) {
+            showToaster('Le nom d\'utilisateur ne peut pas être vide');
+            return;
+        }
+        
+        try {
+            const response = await fetch('https://staff-task.onrender.com/api/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-username': localStorage.getItem('currentUser')
+                },
+                body: JSON.stringify({ username, avatarColor })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) throw new Error(data.error);
+            
+            // Si le nom d'utilisateur a changé, mise à jour du localStorage
+            if (username !== localStorage.getItem('currentUser')) {
+                localStorage.setItem('currentUser', username);
+            }
+            
+            // Mise à jour de l'avatar dans l'interface
+            const userAvatar = document.getElementById('currentUserAvatar');
+            userAvatar.textContent = username.charAt(0).toUpperCase();
+            userAvatar.style.backgroundColor = avatarColor;
+            
+            document.getElementById('profileModal').classList.add('hidden');
+            showToaster('Profil mis à jour avec succès', true);
+            
+            // Recharger la page pour que les changements soient appliqués partout
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+            showToaster(error.message || 'Erreur lors de la mise à jour du profil');
+        }
+    });
+    
+    // Gestion du formulaire de paramètres
+    document.getElementById('saveSettings').addEventListener('click', async function() {
+        const email = document.getElementById('settingsEmail').value.trim();
+        const currentPassword = document.getElementById('settingsCurrentPassword').value;
+        const newPassword = document.getElementById('settingsNewPassword').value;
+        
+        if (!email) {
+            showToaster('L\'email ne peut pas être vide');
+            return;
+        }
+        
+        if (newPassword && !currentPassword) {
+            showToaster('Veuillez entrer votre mot de passe actuel');
+            return;
+        }
+        
+        try {
+            const response = await fetch('https://staff-task.onrender.com/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-username': localStorage.getItem('currentUser')
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    currentPassword: currentPassword || undefined,
+                    newPassword: newPassword || undefined
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) throw new Error(data.error);
+            
+            document.getElementById('settingsModal').classList.add('hidden');
+            showToaster('Paramètres mis à jour avec succès', true);
+        } catch (error) {
+            showToaster(error.message || 'Erreur lors de la mise à jour des paramètres');
+        }
+    });
+    
+    // Annulation des modals
+    document.getElementById('cancelProfile').addEventListener('click', function() {
+        document.getElementById('profileModal').classList.add('hidden');
+    });
+    
+    document.getElementById('cancelSettings').addEventListener('click', function() {
+        document.getElementById('settingsModal').classList.add('hidden');
+    });
+});
 
 
 let boardData = null;
