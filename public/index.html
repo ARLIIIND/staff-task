@@ -18,6 +18,17 @@
             align-items: center;
             margin: 0;
         }
+
+        .forgot-password-link {
+            font-size: 0.875rem; /* Taille plus petite (équivalent à text-sm) */
+            font-style: italic;
+            color: #4c6ef5;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .forgot-password-link:hover {
+            color: #3b82f6;
+        }
         .login-container {
             background-color: white;
             padding: 2rem;
@@ -56,21 +67,24 @@
         <div class="mb-6 flex border-b">
             <button id="loginTab" class="flex-1 py-2 text-center tab-active">Connexion</button>
             <button id="registerTab" class="flex-1 py-2 text-center">Inscription</button>
-            <button id="forgotPasswordTab" class="flex-1 py-2 text-center">Mot de passe</button>
+            <button id="forgotPasswordTab" class="flex-1 py-2 text-center">Mot de passe oublié</button>
         </div>
         
-        <!-- Formulaire de connexion -->
-        <div id="loginForm">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
-                <input type="text" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <!-- Formulaire de connexion -->
+            <div id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                    <input type="text" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                    <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p class="mt-2">
+                        <span id="forgotPasswordLink" class="forgot-password-link">Mot de passe oublié ?</span>
+                    </p>
+                </div>
+                <button id="loginBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Se connecter</button>
             </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <button id="loginBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Se connecter</button>
-        </div>
 
         <!-- Formulaire d'inscription -->
         <div id="registerForm" class="hidden">
@@ -114,31 +128,30 @@
         }
 
         // Gestion des onglets
+// Gestion des onglets (inchangé)
         document.getElementById('loginTab').addEventListener('click', () => {
+            document.getElementById('loginTab').classList.add('tab-active');
+            document.getElementById('registerTab').classList.remove('tab-active');
             document.getElementById('loginForm').classList.remove('hidden');
             document.getElementById('registerForm').classList.add('hidden');
             document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('loginTab').classList.add('tab-active');
-            document.getElementById('registerTab').classList.remove('tab-active');
-            document.getElementById('forgotPasswordTab').classList.remove('tab-active');
         });
 
         document.getElementById('registerTab').addEventListener('click', () => {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.remove('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById('loginTab').classList.remove('tab-active');
             document.getElementById('registerTab').classList.add('tab-active');
-            document.getElementById('forgotPasswordTab').classList.remove('tab-active');
+            document.getElementById('loginTab').classList.remove('tab-active');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
         });
 
-        document.getElementById('forgotPasswordTab').addEventListener('click', () => {
+        // Gestion du clic sur "Mot de passe oublié ?"
+        document.getElementById('forgotPasswordLink').addEventListener('click', () => {
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('registerForm').classList.add('hidden');
             document.getElementById('forgotPasswordForm').classList.remove('hidden');
             document.getElementById('loginTab').classList.remove('tab-active');
             document.getElementById('registerTab').classList.remove('tab-active');
-            document.getElementById('forgotPasswordTab').classList.add('tab-active');
         });
 
         // Gestion de l'inscription
