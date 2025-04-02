@@ -684,16 +684,15 @@ const cancelProfileBtn = document.getElementById('cancelProfile');
 if (cancelProfileBtn) {
     cancelProfileBtn.addEventListener('click', function() {
         const profileModal = document.getElementById('profileModal');
-        if (profileModal) {
-            profileModal.classList.add('hidden');
-        }
+        profileModal.classList.add('hidden');
     });
 }
 
 const cancelSettingsBtn = document.getElementById('cancelSettings');
 if (cancelSettingsBtn) {
     cancelSettingsBtn.addEventListener('click', function() {
-        document.getElementById('settingsModal').classList.add('hidden');
+        const settingsModal = document.getElementById('settingsModal');
+        settingsModal.classList.add('hidden');
     });
 }
 
@@ -830,13 +829,6 @@ function openProfileModal() {
                 // Fermer le modal
                 modal.classList.add('hidden');
                 
-                // Notification de succès
-                if (typeof showToaster === 'function') {
-                    showToaster('Profil mis à jour avec succès');
-                } else {
-                    alert('Profil mis à jour avec succès');
-                }
-                
                 // Recharger la page pour prendre en compte les changements
                 window.location.reload();
             } catch (error) {
@@ -878,6 +870,8 @@ function updateUserAvatar() {
 function openSettingsModal() {
     const modal = document.getElementById('settingsModal');
     const emailInput = document.getElementById('userEmail');
+    const currentPasswordInput = document.getElementById('currentPassword');
+    const newPasswordInput = document.getElementById('newPassword');
     
     // Récupérer le profil de l'utilisateur pour pré-remplir l'email
     fetch('https://staff-task.onrender.com/api/profile', {
@@ -892,29 +886,64 @@ function openSettingsModal() {
     .catch(error => console.error('Erreur lors de la récupération du profil:', error));
     
     document.getElementById('saveSettings').onclick = async function() {
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
+        const email = emailInput.value.trim();
+        const currentPassword = currentPasswordInput.value;
+        const newPassword = newPasswordInput.value;
         
+        // Préparer les données à envoyer
+        const settingsData = {};
+        
+        // Vérifier et ajouter l'email si modifié
+        if (email) {
+            settingsData.email = email;
+        }
+        
+        // Vérifier et ajouter les mots de passe si tous deux sont remplis
         if (currentPassword && newPassword) {
-            try {
-                const response = await fetch('https://staff-task.onrender.com/api/settings', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-username': localStorage.getItem('currentUser')
-                    },
-                    body: JSON.stringify({
-                        currentPassword,
-                        newPassword
-                    })
-                });
-                
-                if (!response.ok) throw new Error('Échec de la modification du mot de passe');
-                
-                showToaster('Mot de passe mis à jour avec succès');
-                modal.classList.add('hidden');
-            } catch (error) {
+            settingsData.currentPassword = currentPassword;
+            settingsData.newPassword = newPassword;
+        }
+        
+        // Ne rien faire si aucune modification
+        if (Object.keys(settingsData).length === 0) {
+            modal.classList.add('hidden');
+            return;
+        }
+        
+        try {
+            const response = await fetch('https://staff-task.onrender.com/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-username': localStorage.getItem('currentUser')
+                },
+                body: JSON.stringify(settingsData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Échec de la modification');
+            }
+            
+            // Notification de succès
+            if (typeof showToaster === 'function') {
+                showToaster('Paramètres mis à jour avec succès');
+            } else {
+                alert('Paramètres mis à jour avec succès');
+            }
+            
+            // Fermer le modal
+            modal.classList.add('hidden');
+            
+            // Réinitialiser les champs
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+        } catch (error) {
+            // Gérer les erreurs
+            if (typeof showToaster === 'function') {
                 showToaster(error.message);
+            } else {
+                alert(error.message);
             }
         }
     };
