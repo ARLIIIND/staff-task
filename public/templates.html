@@ -941,6 +941,16 @@ function openSettingsModal() {
     // Initialiser l'avatar au chargement
     initUserAvatar();
 
+
+    document.addEventListener("DOMContentLoaded", function() {
+    const cancelBtn = document.getElementById('cancelUseTemplate');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            document.getElementById('useTemplateModal').classList.add('hidden');
+        });
+    }
+});
+
 </script>
 
 <div id="profileModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
