@@ -701,6 +701,8 @@ function openProfileModal() {
     const avatarPreview = document.getElementById('avatarPreview');
     const colorSelector = document.getElementById('colorSelector');
     const avatarUpload = document.getElementById('avatarUpload');
+    const saveProfileBtn = document.getElementById('saveProfile');
+
     
     const currentUser = localStorage.getItem('currentUser');
     usernameInput.value = currentUser;
@@ -760,7 +762,7 @@ function openProfileModal() {
         }
     });
     
-    // Déplacer cette partie à l'intérieur de openProfileModal
+if (saveProfileBtn) {
     saveProfileBtn.onclick = async function() {
     const newUsername = usernameInput.value.trim();
     if (!newUsername) return;
@@ -837,9 +839,10 @@ function openProfileModal() {
             showToaster(error.message || 'Erreur lors de la mise à jour du profil');
         } else {
             alert(error.message || 'Erreur lors de la mise à jour du profil');
+            }
         }
-    }
-};
+    };
+}
     
     // Afficher le modal
     modal.classList.remove('hidden');
