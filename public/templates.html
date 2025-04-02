@@ -285,9 +285,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-      document.getElementById('cancelUseTemplate').addEventListener('click', function() {
-        document.getElementById('useTemplateModal').classList.add('hidden');
-    });
+  const cancelUseTemplateBtn = document.getElementById('cancelUseTemplate');
+    if (cancelUseTemplateBtn) {
+        cancelUseTemplateBtn.addEventListener('click', function() {
+            document.getElementById('useTemplateModal').classList.add('hidden');
+        });
+    }
     
     const currentUserAvatar = document.getElementById('currentUserAvatar');
     const firstLetter = currentUser.substring(0, 1).toUpperCase();
@@ -557,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 async function useTemplate(template) {
-    // Stocker l'ID du template dans un champ caché
+    // Stocker l'ID du template
     document.getElementById('selectedTemplateId').value = template.id;
     
     // Pré-remplir le titre avec celui du template
@@ -565,7 +568,7 @@ async function useTemplate(template) {
     
     // Afficher le modal
     document.getElementById('useTemplateModal').classList.remove('hidden');
-}
+}   
 
 // Ajouter ces gestionnaires d'événements après avoir défini la fonction useTemplate
 document.getElementById('cancelUseTemplate').addEventListener('click', function() {
@@ -678,12 +681,15 @@ if (openAppSettingsBtn) {
     });
 }
 
-const cancelProfileBtn = document.getElementById('cancelProfile').addEventListener('click', function() {
-    const profileModal = document.getElementById('profileModal');
-    if (profileModal) {
-        profileModal.classList.add('hidden');
-    }
-});
+const cancelProfileBtn = document.getElementById('cancelProfile');
+if (cancelProfileBtn) {
+    cancelProfileBtn.addEventListener('click', function() {
+        const profileModal = document.getElementById('profileModal');
+        if (profileModal) {
+            profileModal.classList.add('hidden');
+        }
+    });
+}
 
 const cancelSettingsBtn = document.getElementById('cancelSettings');
 if (cancelSettingsBtn) {
@@ -1002,6 +1008,7 @@ function openSettingsModal() {
     </div>
 </div>
 
+<!-- Modal pour créer un projet à partir d'un template -->
 <div id="useTemplateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-lg shadow-xl p-6 w-96">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Créer un projet à partir de ce template</h3>
