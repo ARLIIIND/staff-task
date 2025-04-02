@@ -114,6 +114,9 @@
             <p class="mt-4 text-sm text-gray-500 text-center">
                 Un email avec les instructions de réinitialisation vous sera envoyé.
             </p>
+            <p class="mt-4 text-sm text-center">
+                <span id="backToLoginLink" class="text-indigo-600 hover:text-indigo-800 cursor-pointer">Retour à la connexion</span>
+            </p>
         </div>
     </div>
 
@@ -135,7 +138,6 @@
             document.getElementById('forgotPasswordForm').classList.add('hidden');
             document.getElementById('loginTab').classList.add('tab-active');
             document.getElementById('registerTab').classList.remove('tab-active');
-            document.getElementById('forgotPasswordTab').classList.remove('tab-active');
         });
 
         document.getElementById('registerTab').addEventListener('click', () => {
@@ -144,16 +146,22 @@
             document.getElementById('forgotPasswordForm').classList.add('hidden');
             document.getElementById('loginTab').classList.remove('tab-active');
             document.getElementById('registerTab').classList.add('tab-active');
-            document.getElementById('forgotPasswordTab').classList.remove('tab-active');
         });
 
-        document.getElementById('forgotPasswordTab').addEventListener('click', () => {
+        // Gestion du lien "Mot de passe oublié"
+        document.getElementById('forgotPasswordLink').addEventListener('click', () => {
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('registerForm').classList.add('hidden');
             document.getElementById('forgotPasswordForm').classList.remove('hidden');
             document.getElementById('loginTab').classList.remove('tab-active');
             document.getElementById('registerTab').classList.remove('tab-active');
-            document.getElementById('forgotPasswordTab').classList.add('tab-active');
+        });
+
+        // Gestion du retour à la connexion depuis le formulaire de mot de passe oublié
+        document.getElementById('backToLoginLink').addEventListener('click', () => {
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('loginTab').classList.add('tab-active');
         });
 
         // Gestion de l'inscription
@@ -175,6 +183,8 @@
             }
 
             try {
+                showToaster('Inscription en cours...', true);
+                
                 const response = await fetch('https://staff-task.onrender.com/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -188,6 +198,7 @@
                 document.getElementById('loginTab').click();
                 document.getElementById('username').value = username;
             } catch (error) {
+                console.error('Erreur d\'inscription:', error);
                 showToaster(error.message || 'Erreur lors de l\'inscription');
             }
         });
@@ -203,6 +214,8 @@
             }
 
             try {
+                showToaster('Connexion en cours...', true);
+                
                 const response = await fetch('https://staff-task.onrender.com/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -215,6 +228,7 @@
                 localStorage.setItem('currentUser', data.username);
                 window.location.href = 'projects';
             } catch (error) {
+                console.error('Erreur de connexion:', error);
                 showToaster(error.message || 'Erreur lors de la connexion');
             }
         });
@@ -229,6 +243,8 @@
             }
 
             try {
+                showToaster('Envoi de la demande...', true);
+                
                 const response = await fetch('https://staff-task.onrender.com/api/forgot-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -240,6 +256,7 @@
                 
                 showToaster(data.message, true);
             } catch (error) {
+                console.error('Erreur de réinitialisation:', error);
                 showToaster(error.message || 'Erreur lors de la demande de réinitialisation');
             }
         });
