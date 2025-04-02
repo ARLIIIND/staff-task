@@ -843,20 +843,28 @@ function updateUserAvatar() {
     const userAvatar = localStorage.getItem('userAvatar');
     const userColor = localStorage.getItem('userColor');
     const currentUserAvatar = document.getElementById('currentUserAvatar');
-    
-    if (currentUser && currentUserAvatar) {
-        if (userAvatar) {
-            // Utiliser l'image uploadée
-            currentUserAvatar.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = userAvatar;
-            img.className = 'w-full h-full object-cover rounded-full';
+
+    if (!currentUser || !currentUserAvatar) return;
+
+    // 1️⃣ Reset complet de l'avatar
+    currentUserAvatar.innerHTML = '';
+    currentUserAvatar.style.backgroundColor = 'transparent';
+    currentUserAvatar.style.backgroundImage = 'none';
+
+    // 2️⃣ Priorité à l'avatar uploadé
+    if (userAvatar) {
+        const img = document.createElement('img');
+        img.src = userAvatar;
+        img.className = 'w-full h-full object-cover rounded-full';
+        img.onload = () => {
+            // Force l'affichage après chargement
             currentUserAvatar.appendChild(img);
-        } else {
-            // Utiliser l'initiale avec la couleur
-            currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
-            currentUserAvatar.style.backgroundColor = userColor || '#4c6ef5';
-        }
+        };
+    } 
+    // 3️⃣ Fallback sur l'initiale colorée
+    else {
+        currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
+        currentUserAvatar.style.backgroundColor = userColor || '#4c6ef5';
     }
 }
 
