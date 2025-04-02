@@ -489,9 +489,12 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             try {
-                    const response = await fetch('https://staff-task.onrender.com/api/templates', {
+                const response = await fetch('https://staff-task.onrender.com/api/templates', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-username': localStorage.getItem('currentUser') // Ajout de l'en-tête d'authentification
+                    },
                     body: JSON.stringify(newTemplate)
                 });
                 await response.json();
