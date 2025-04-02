@@ -1616,31 +1616,52 @@ document.addEventListener('DOMContentLoaded', async function() {
             colorSelector.appendChild(colorOption);
         });
         
-        document.getElementById('saveProfile').onclick = async function() {
-            const newUsername = usernameInput.value.trim();
-            if (!newUsername) return;
-            
-            const selectedColor = document.querySelector('.color-option.selected').dataset.color;
-            
-            // Mettre à jour les informations de l'utilisateur
-            localStorage.setItem('currentUser', newUsername);
-            localStorage.setItem('userColor', selectedColor);
-            
-            // Mettre à jour l'avatar dans l'interface
-            currentUserAvatar.textContent = newUsername.substring(0, 1).toUpperCase();
-            currentUserAvatar.style.backgroundColor = selectedColor;
-            
-            // Fermer le modal
-            modal.classList.add('hidden');
-            
-            // Rechargement des données pour prendre en compte les changements
-            await loadBoardData(localStorage.getItem('currentProject'));
-            initBoard();
-            updateStats();
-        };
+document.getElementById('saveProfile').onclick = async function() {
+    const newUsername = usernameInput.value.trim();
+    if (!newUsername) return;
+    
+    const selectedColor = document.querySelector('.color-option.selected').dataset.color;
+    const oldUsername = localStorage.getItem('currentUser');
+    
+    try {
+        // Mettre à jour le profil sur le serveur
+        const response = await fetch('https://staff-task.onrender.com/api/update-profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-username': oldUsername // En-tête d'authentification
+            },
+            body: JSON.stringify({
+                newUsername,
+                avatarColor: selectedColor
+            })
+        });
         
-        modal.classList.remove('hidden');
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Erreur lors de la mise à jour du profil');
+        }
+        
+        // Mettre à jour les informations locales seulement après confirmation du serveur
+        localStorage.setItem('currentUser', newUsername);
+        localStorage.setItem('userColor', selectedColor);
+        
+        // Mettre à jour l'avatar dans l'interface
+        currentUserAvatar.textContent = newUsername.substring(0, 1).toUpperCase();
+        currentUserAvatar.style.backgroundColor = selectedColor;
+        
+        // Fermer le modal
+        modal.classList.add('hidden');
+        
+        // Notification de succès
+        showToaster('Profil mis à jour avec succès');
+        
+        // Recharger les projets pour prendre en compte les changements
+        await loadProjects();
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors de la mise à jour du profil');
     }
+};
     
     function openSettingsModal() {
         const modal = document.getElementById('settingsModal');
