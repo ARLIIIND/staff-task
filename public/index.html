@@ -87,9 +87,21 @@
             <button id="loginBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Se connecter</button>
         </div>
 
-        <!-- Formulaire d'inscription (inchangé) -->
+<!-- Formulaire d'inscription -->
         <div id="registerForm" class="hidden">
-            <!-- ... (reste inchangé) -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="regEmail" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                <input type="text" id="regUsername" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <input type="password" id="regPassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button id="registerBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">S'inscrire</button>
         </div>
 
         <!-- Formulaire de mot de passe oublié (inchangé, mais affiché via le lien) -->
