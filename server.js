@@ -250,6 +250,64 @@ app.post('/api/reset-password', async (req, res) => {
   }
 });
 
+app.post('/api/change-password', authMiddleware, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Paramètres manquants' });
+  }
+  
+  try {
+    const user = await User.findOne({ username: req.user });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
+    
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    
+    res.json({ message: 'Mot de passe mis à jour avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du mot de passe:', error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du mot de passe' });
+  }
+});
+
+app.post('/api/update-profile', authMiddleware, async (req, res) => {
+  const { newUsername, avatarColor, avatar } = req.body;
+  
+  try {
+    const user = await User.findOne({ username: req.user });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    // Mettre à jour uniquement les champs fournis
+    if (newUsername && newUsername !== user.username) {
+      const existingUsername = await User.findOne({ username: newUsername });
+      if (existingUsername) return res.status(400).json({ error: 'Nom d\'utilisateur déjà utilisé' });
+      user.username = newUsername;
+    }
+    
+    if (avatarColor) user.avatarColor = avatarColor;
+    if (avatar !== undefined) user.avatar = avatar;
+    
+    await user.save();
+    
+    res.json({ 
+      message: 'Profil mis à jour avec succès',
+      user: {
+        username: user.username,
+        email: user.email,
+        avatarColor: user.avatarColor,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du profil:', error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du profil' });
+  }
+});
+
 // Route pour mettre à jour le profil utilisateur
 app.post('/api/profile', authMiddleware, async (req, res) => {
   const { username, avatarColor, avatar } = req.body;
