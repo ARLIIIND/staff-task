@@ -90,32 +90,86 @@
             text-overflow: ellipsis;
         }
 
-        .user-A { background-color: #4c6ef5; }
-        .user-L { background-color: #4dabf7; }
-        .user-F { background-color: #e64980; }
-        .user-S { background-color: #fab005; }
-        .user-K { background-color: #82c91e; }
-        .user-I { background-color: #be4bdb; }
-        .user-T { background-color: #fd7e14; }
-        .user-M { background-color: #20c997; }
-        .user-R { background-color: #fa5252; }
-        .user-B { background-color: #845ef7; }
-        .user-C { background-color: #339af0; }
-        .user-D { background-color: #f06595; }
-        .user-E { background-color: #ff922b; }
-        .user-G { background-color: #51cf66; }
-        .user-H { background-color: #22b8cf; }
-        .user-J { background-color: #aa8a00; }
-        .user-N { background-color: #868e96; }
-        .user-O { background-color: #e67700; }
-        .user-P { background-color: #5f3dc4; }
-        .user-Q { background-color: #c2255c; }
-        .user-U { background-color: #0b7285; }
-        .user-V { background-color: #1098ad; }
-        .user-W { background-color: #9c36b5; }
-        .user-X { background-color: #f03e3e; }
-        .user-Y { background-color: #1864ab; }
-        .user-Z { background-color: #e03131; }
+        .profile-menu {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    z-index: 100;
+    overflow: hidden;
+    display: none;
+}
+
+.profile-menu.show {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.profile-menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.profile-menu-item:hover {
+    background-color: #f5f7fa;
+}
+
+.profile-menu-item i {
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+/* Animation pour le menu */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Styles pour le modal de profil */
+.avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    font-weight: bold;
+}
+
+.color-selector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+}
+
+.color-option.selected {
+    border-color: #333;
+}
+
+
     </style>
 </head>
 
@@ -141,12 +195,16 @@
                     </div>
                 </div>
                 <div class="flex items-center">
-                    <div id="onlineUsers" class="flex space-x-2">
-                        <!-- Les utilisateurs en ligne seront affichés ici -->
-                    </div>
                     <div class="ml-3 relative">
-                        <div id="currentUserAvatar" class="user-avatar cursor-pointer">
-                            <!-- Initiales de l'utilisateur actuel -->
+                        <div id="currentUserAvatar" class="user-avatar cursor-pointer"></div>
+                        <!-- Menu profil utilisateur -->
+                        <div id="profileMenu" class="profile-menu">
+                            <div class="profile-menu-item" id="openProfileSettings">
+                                <i class="fas fa-user"></i> Mon profil
+                            </div>
+                            <div class="profile-menu-item" id="openAppSettings">
+                                <i class="fas fa-cog"></i> Paramètres
+                            </div>
                         </div>
                     </div>
                     <button id="logoutBtn" class="ml-4 px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
@@ -504,6 +562,227 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erreur lors de l’utilisation du template:', error);
         }
     }
+
+    const avatarColors = [
+    '#4c6ef5', '#4dabf7', '#e64980', '#fab005', '#82c91e', 
+    '#be4bdb', '#fd7e14', '#20c997', '#fa5252', '#845ef7'
+];
+
+// Gestion du menu profil
+const currentUserAvatar = document.getElementById('currentUserAvatar');
+const profileMenu = document.getElementById('profileMenu');
+
+currentUserAvatar.addEventListener('click', function(e) {
+    e.stopPropagation();
+    profileMenu.classList.toggle('show');
+});
+
+document.addEventListener('click', function(e) {
+    if (!profileMenu.contains(e.target) && e.target !== currentUserAvatar) {
+        profileMenu.classList.remove('show');
+    }
+});
+
+// Gestion du modal de profil
+document.getElementById('openProfileSettings').addEventListener('click', function() {
+    profileMenu.classList.remove('show');
+    openProfileModal();
+});
+
+document.getElementById('openAppSettings').addEventListener('click', function() {
+    profileMenu.classList.remove('show');
+    openSettingsModal();
+});
+
+document.getElementById('cancelProfile').addEventListener('click', function() {
+    document.getElementById('profileModal').classList.add('hidden');
+});
+
+document.getElementById('cancelSettings').addEventListener('click', function() {
+    document.getElementById('settingsModal').classList.add('hidden');
+});
+
+function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    const usernameInput = document.getElementById('profileUsername');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const colorSelector = document.getElementById('colorSelector');
+    
+    const currentUser = localStorage.getItem('currentUser');
+    usernameInput.value = currentUser;
+    
+    // Récupérer la couleur actuelle de l'avatar
+    let userColor = localStorage.getItem('userColor');
+    if (!userColor) {
+        // Assignation aléatoire si pas encore définie
+        userColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+        localStorage.setItem('userColor', userColor);
+    }
+    
+    // Afficher l'aperçu de l'avatar
+    avatarPreview.style.backgroundColor = userColor;
+    avatarPreview.textContent = currentUser.substring(0, 1).toUpperCase();
+    
+    // Générer les options de couleurs
+    colorSelector.innerHTML = '';
+    avatarColors.forEach(color => {
+        const colorOption = document.createElement('div');
+        colorOption.className = `color-option ${color === userColor ? 'selected' : ''}`;
+        colorOption.style.backgroundColor = color;
+        colorOption.dataset.color = color;
+        
+        colorOption.addEventListener('click', function() {
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            colorOption.classList.add('selected');
+            avatarPreview.style.backgroundColor = color;
+        });
+        
+        colorSelector.appendChild(colorOption);
+    });
+    
+    document.getElementById('saveProfile').onclick = function() {
+        const newUsername = usernameInput.value.trim();
+        if (!newUsername) return;
+        
+        const selectedColor = document.querySelector('.color-option.selected').dataset.color;
+        
+        // Mettre à jour les informations de l'utilisateur
+        localStorage.setItem('currentUser', newUsername);
+        localStorage.setItem('userColor', selectedColor);
+        
+        // Mettre à jour l'avatar dans l'interface
+        currentUserAvatar.textContent = newUsername.substring(0, 1).toUpperCase();
+        currentUserAvatar.style.backgroundColor = selectedColor;
+        
+        // Fermer le modal
+        modal.classList.add('hidden');
+        
+        // Recharger les projets pour prendre en compte les changements
+        loadProjects();
+    };
+    
+    modal.classList.remove('hidden');
+}
+
+function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    
+    document.getElementById('saveSettings').onclick = async function() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        
+        if (currentPassword && newPassword) {
+            try {
+                const response = await fetch('https://staff-task.onrender.com/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-username': localStorage.getItem('currentUser')
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Échec de la modification du mot de passe');
+                
+                showToaster('Mot de passe mis à jour avec succès');
+                modal.classList.add('hidden');
+            } catch (error) {
+                showToaster(error.message);
+            }
+        }
+    };
+    
+    modal.classList.remove('hidden');
+}
+
+// Initialiser l'avatar de l'utilisateur avec sa couleur personnalisée
+function initUserAvatar() {
+    const currentUser = localStorage.getItem('currentUser');
+    const userColor = localStorage.getItem('userColor');
+    
+    if (currentUser && currentUserAvatar) {
+        currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
+        
+        if (userColor) {
+            currentUserAvatar.style.backgroundColor = userColor;
+        } else {
+            // Assigner une couleur aléatoire si pas encore définie
+            const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+            localStorage.setItem('userColor', randomColor);
+            currentUserAvatar.style.backgroundColor = randomColor;
+        }
+    }
+}
+
+// Initialiser l'avatar au chargement
+initUserAvatar();
+
 </script>
+
+<div id="profileModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Mon profil</h3>
+        
+        <div class="text-center mb-4">
+            <div id="avatarPreview" class="avatar-preview">
+                <!-- L'initiale sera affichée ici -->
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur</label>
+            <input type="text" id="profileUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Couleur de l'avatar</label>
+            <div class="color-selector" id="colorSelector">
+                <!-- Les options de couleurs seront générées dynamiquement -->
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Télécharger une image</label>
+            <input type="file" id="avatarUpload" accept="image/*" class="w-full p-1 border border-gray-300 rounded-md">
+        </div>
+        
+        <div class="mt-4 flex justify-end space-x-3">
+            <button id="cancelProfile" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+            <button id="saveProfile" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les paramètres -->
+<div id="settingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Paramètres</h3>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="userEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
+            <input type="password" id="currentPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+            <input type="password" id="newPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <div class="mt-4 flex justify-end space-x-3">
+            <button id="cancelSettings" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
+            <button id="saveSettings" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+
 </body>
 </html>
