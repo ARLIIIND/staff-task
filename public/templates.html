@@ -300,6 +300,66 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Veuillez entrer un titre pour le projet.');
         return;
     }
+
+    // Cacher le modal pendant le traitement
+    document.getElementById('useTemplateModal').classList.add('hidden');
+    
+    try {
+        // 1. Récupérer le template
+        const templateResponse = await fetch(`https://staff-task.onrender.com/api/templates/${templateId}`, {
+            headers: { 'x-username': localStorage.getItem('currentUser') }
+        });
+        
+        if (!templateResponse.ok) throw new Error('Erreur lors de la récupération du template');
+        
+        const template = await templateResponse.json();
+        
+        // 2. Créer un nouveau projet
+        const projectResponse = await fetch('https://staff-task.onrender.com/api/projects', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-username': localStorage.getItem('currentUser')
+            },
+            body: JSON.stringify({
+                title: projectTitle
+            })
+        });
+        
+        if (!projectResponse.ok) throw new Error('Erreur lors de la création du projet');
+        
+        const project = await projectResponse.json();
+        
+        // 3. Créer un nouveau tableau basé sur le template
+        const boardData = {
+            title: projectTitle,
+            columns: template.columns ? template.columns.map(col => ({
+                id: col.id,
+                title: col.title,
+                color: col.color || '#4c6ef5',
+                tasks: col.tasks || []
+            })) : []
+        };
+        
+        const boardResponse = await fetch(`https://staff-task.onrender.com/api/board/${project.id}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-username': localStorage.getItem('currentUser')
+            },
+            body: JSON.stringify(boardData)
+        });
+        
+        if (!boardResponse.ok) throw new Error('Erreur lors de la création du tableau');
+        
+        // 4. Rediriger vers le nouveau projet
+        localStorage.setItem('currentProject', project.id);
+        window.location.href = 'app';
+    } catch (error) {
+        console.error('Erreur lors de l\'utilisation du template:', error);
+        alert(`Erreur: ${error.message}`);
+    }
+});
     
     const currentUserAvatar = document.getElementById('currentUserAvatar');
     const firstLetter = currentUser.substring(0, 1).toUpperCase();
@@ -581,65 +641,7 @@ async function useTemplate(template) {
 
 
     
-    // Cacher le modal pendant le traitement
-    document.getElementById('useTemplateModal').classList.add('hidden');
     
-    try {
-        // 1. Récupérer le template
-        const templateResponse = await fetch(`https://staff-task.onrender.com/api/templates/${templateId}`, {
-            headers: { 'x-username': localStorage.getItem('currentUser') }
-        });
-        
-        if (!templateResponse.ok) throw new Error('Erreur lors de la récupération du template');
-        
-        const template = await templateResponse.json();
-        
-        // 2. Créer un nouveau projet
-        const projectResponse = await fetch('https://staff-task.onrender.com/api/projects', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-username': localStorage.getItem('currentUser')
-            },
-            body: JSON.stringify({
-                title: projectTitle
-            })
-        });
-        
-        if (!projectResponse.ok) throw new Error('Erreur lors de la création du projet');
-        
-        const project = await projectResponse.json();
-        
-        // 3. Créer un nouveau tableau basé sur le template
-        const boardData = {
-            title: projectTitle,
-            columns: template.columns ? template.columns.map(col => ({
-                id: col.id,
-                title: col.title,
-                color: col.color || '#4c6ef5',
-                tasks: col.tasks || []
-            })) : []
-        };
-        
-        const boardResponse = await fetch(`https://staff-task.onrender.com/api/board/${project.id}`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-username': localStorage.getItem('currentUser')
-            },
-            body: JSON.stringify(boardData)
-        });
-        
-        if (!boardResponse.ok) throw new Error('Erreur lors de la création du tableau');
-        
-        // 4. Rediriger vers le nouveau projet
-        localStorage.setItem('currentProject', project.id);
-        window.location.href = 'app';
-    } catch (error) {
-        console.error('Erreur lors de l\'utilisation du template:', error);
-        alert(`Erreur: ${error.message}`);
-    }
-});
 
     const avatarColors = [
     '#4c6ef5', '#4dabf7', '#e64980', '#fab005', '#82c91e', 
