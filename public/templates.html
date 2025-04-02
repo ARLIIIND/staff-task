@@ -279,6 +279,15 @@
 document.addEventListener('DOMContentLoaded', function() {
 
 
+     document.getElementById('cancelProfile')?.addEventListener('click', function() {
+        document.getElementById('profileModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelSettings')?.addEventListener('click', function() {
+        document.getElementById('settingsModal').classList.add('hidden');
+    });
+
+
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) {
         window.location.href = 'index';
@@ -677,20 +686,6 @@ if (openAppSettingsBtn) {
     openAppSettingsBtn.addEventListener('click', function() {
         profileMenu.classList.remove('show');
         openSettingsModal();
-    });
-}
-
-const cancelProfileBtn = document.getElementById('cancelProfile');
-if (cancelProfileBtn) {
-    cancelProfileBtn.addEventListener('click', function() {
-        document.getElementById('profileModal').classList.add('hidden');
-    });
-}
-
-const cancelSettingsBtn = document.getElementById('cancelSettings');
-if (cancelSettingsBtn) {
-    cancelSettingsBtn.addEventListener('click', function() {
-        document.getElementById('settingsModal').classList.add('hidden');
     });
 }
 
