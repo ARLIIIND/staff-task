@@ -421,23 +421,35 @@ document.addEventListener('click', function(e) {
 });
 
 // Gestion du modal de profil
-document.getElementById('openProfileSettings').addEventListener('click', function() {
-    profileMenu.classList.remove('show');
-    openProfileModal();
-});
+const openProfileSettingsBtn = document.getElementById('openProfileSettings');
+if (openProfileSettingsBtn) {
+    openProfileSettingsBtn.addEventListener('click', function() {
+        profileMenu.classList.remove('show');
+        openProfileModal();
+    });
+}
 
-document.getElementById('openAppSettings').addEventListener('click', function() {
-    profileMenu.classList.remove('show');
-    openSettingsModal();
-});
+const openAppSettingsBtn = document.getElementById('openAppSettings');
+if (openAppSettingsBtn) {
+    openAppSettingsBtn.addEventListener('click', function() {
+        profileMenu.classList.remove('show');
+        openSettingsModal();
+    });
+}
 
-document.getElementById('cancelProfile').addEventListener('click', function() {
-    document.getElementById('profileModal').classList.add('hidden');
-});
+const cancelProfileBtn = document.getElementById('cancelProfile');
+if (cancelProfileBtn) {
+    cancelProfileBtn.addEventListener('click', function() {
+        document.getElementById('profileModal').classList.add('hidden');
+    });
+}
 
-document.getElementById('cancelSettings').addEventListener('click', function() {
-    document.getElementById('settingsModal').classList.add('hidden');
-});
+const cancelSettingsBtn = document.getElementById('cancelSettings');
+if (cancelSettingsBtn) {
+    cancelSettingsBtn.addEventListener('click', function() {
+        document.getElementById('settingsModal').classList.add('hidden');
+    });
+}
 
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
@@ -527,6 +539,19 @@ document.getElementById('saveProfile').onclick = async function() {
 
 function openSettingsModal() {
     const modal = document.getElementById('settingsModal');
+    const emailInput = document.getElementById('userEmail');
+    
+    // Récupérer le profil de l'utilisateur pour pré-remplir l'email
+    fetch('https://staff-task.onrender.com/api/profile', {
+        headers: { 'x-username': localStorage.getItem('currentUser') }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.email) {
+            emailInput.value = data.email;
+        }
+    })
+    .catch(error => console.error('Erreur lors de la récupération du profil:', error));
     
     document.getElementById('saveSettings').onclick = async function() {
         const currentPassword = document.getElementById('currentPassword').value;
@@ -534,7 +559,7 @@ function openSettingsModal() {
         
         if (currentPassword && newPassword) {
             try {
-                const response = await fetch('https://staff-task.onrender.com/api/change-password', {
+                const response = await fetch('https://staff-task.onrender.com/api/settings', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

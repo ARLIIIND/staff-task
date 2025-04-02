@@ -1534,23 +1534,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     
     // Gestion du modal de profil
-document.getElementById('openProfileSettings').addEventListener('click', function() {
-    profileMenu.classList.remove('show');
-    openProfileModal();
-});
+const openProfileSettingsBtn = document.getElementById('openProfileSettings');
+if (openProfileSettingsBtn) {
+    openProfileSettingsBtn.addEventListener('click', function() {
+        profileMenu.classList.remove('show');
+        openProfileModal();
+    });
+}
 
-document.getElementById('openAppSettings').addEventListener('click', function() {
-    profileMenu.classList.remove('show');
-    openSettingsModal();
-});
+const openAppSettingsBtn = document.getElementById('openAppSettings');
+if (openAppSettingsBtn) {
+    openAppSettingsBtn.addEventListener('click', function() {
+        profileMenu.classList.remove('show');
+        openSettingsModal();
+    });
+}
     
-    document.getElementById('cancelProfile').addEventListener('click', function() {
+const cancelProfileBtn = document.getElementById('cancelProfile');
+if (cancelProfileBtn) {
+    cancelProfileBtn.addEventListener('click', function() {
         document.getElementById('profileModal').classList.add('hidden');
     });
-    
-    document.getElementById('cancelSettings').addEventListener('click', function() {
+}
+
+const cancelSettingsBtn = document.getElementById('cancelSettings');
+if (cancelSettingsBtn) {
+    cancelSettingsBtn.addEventListener('click', function() {
         document.getElementById('settingsModal').classList.add('hidden');
     });
+}
     
     // Filtre des tâches personnelles
     document.getElementById('myTasksOnly').addEventListener('change', function(e) {
@@ -1664,39 +1676,52 @@ document.getElementById('saveProfile').onclick = async function() {
     }
 };
     
-    function openSettingsModal() {
-        const modal = document.getElementById('settingsModal');
+function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    const emailInput = document.getElementById('userEmail');
+    
+    // Récupérer le profil de l'utilisateur pour pré-remplir l'email
+    fetch('https://staff-task.onrender.com/api/profile', {
+        headers: { 'x-username': localStorage.getItem('currentUser') }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.email) {
+            emailInput.value = data.email;
+        }
+    })
+    .catch(error => console.error('Erreur lors de la récupération du profil:', error));
+    
+    document.getElementById('saveSettings').onclick = async function() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
         
-        document.getElementById('saveSettings').onclick = async function() {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            
-            if (currentPassword && newPassword) {
-                try {
-                    const response = await fetch('https://staff-task.onrender.com/api/change-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-username': localStorage.getItem('currentUser')
-                        },
-                        body: JSON.stringify({
-                            currentPassword,
-                            newPassword
-                        })
-                    });
-                    
-                    if (!response.ok) throw new Error('Échec de la modification du mot de passe');
-                    
-                    showToaster('Mot de passe mis à jour avec succès');
-                    modal.classList.add('hidden');
-                } catch (error) {
-                    showToaster(error.message);
-                }
+        if (currentPassword && newPassword) {
+            try {
+                const response = await fetch('https://staff-task.onrender.com/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-username': localStorage.getItem('currentUser')
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Échec de la modification du mot de passe');
+                
+                showToaster('Mot de passe mis à jour avec succès');
+                modal.classList.add('hidden');
+            } catch (error) {
+                showToaster(error.message);
             }
-        };
-        
-        modal.classList.remove('hidden');
-    }
+        }
+    };
+    
+    modal.classList.remove('hidden');
+}
     
     // Modifier la fonction createTaskElement pour utiliser les couleurs personnalisées
     const originalCreateTaskElement = window.createTaskElement;
