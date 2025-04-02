@@ -284,6 +284,13 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = 'index';
         return;
     }
+
+  const cancelUseTemplateBtn = document.getElementById('cancelUseTemplate');
+    if (cancelUseTemplateBtn) {
+        cancelUseTemplateBtn.addEventListener('click', function() {
+            document.getElementById('useTemplateModal').classList.add('hidden');
+        });
+    }
     
     const currentUserAvatar = document.getElementById('currentUserAvatar');
     const firstLetter = currentUser.substring(0, 1).toUpperCase();
@@ -553,21 +560,18 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 async function useTemplate(template) {
+    // Stocker l'ID du template
     document.getElementById('selectedTemplateId').value = template.id;
-    document.getElementById('newProjectTitle').value = template.title;
-    const modal = document.getElementById('useTemplateModal');
-    modal.classList.remove('hidden');
     
-    const cancelBtn = document.getElementById('cancelUseTemplate');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-            modal.classList.add('hidden');
-        });
-    }
-}  
+    // Pré-remplir le titre avec celui du template
+    document.getElementById('newProjectTitle').value = template.title;
+    
+    // Afficher le modal
+    document.getElementById('useTemplateModal').classList.remove('hidden');
+}   
 
 // Ajouter ces gestionnaires d'événements après avoir défini la fonction useTemplate
-document.getElementById('cancelUseTemplate').addEventListener('click', function() {
+document.getElementById('cancelUseTemplate').addEventListener('click', async function() {
     document.getElementById('useTemplateModal').classList.add('hidden');
 });
 
@@ -940,16 +944,6 @@ function openSettingsModal() {
     
     // Initialiser l'avatar au chargement
     initUserAvatar();
-
-
-    document.addEventListener("DOMContentLoaded", function() {
-    const cancelBtn = document.getElementById('cancelUseTemplate');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-            document.getElementById('useTemplateModal').classList.add('hidden');
-        });
-    }
-});
 
 </script>
 
