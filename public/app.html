@@ -1525,9 +1525,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {
         console.error('Erreur détaillée:', error);
         showToaster(error.message || 'Erreur lors de l\'enregistrement du template');
-    }
-};
-
+        }
+    };
+}); 
 
                 // Configurations des couleurs disponibles
     const avatarColors = [
@@ -1702,7 +1702,7 @@ function openProfileModal() {
     
     // Afficher le modal
     modal.classList.remove('hidden');
-}
+    }
     
 function openSettingsModal() {
     const modal = document.getElementById('settingsModal');
