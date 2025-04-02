@@ -683,16 +683,14 @@ if (openAppSettingsBtn) {
 const cancelProfileBtn = document.getElementById('cancelProfile');
 if (cancelProfileBtn) {
     cancelProfileBtn.addEventListener('click', function() {
-        const profileModal = document.getElementById('profileModal');
-        profileModal.classList.add('hidden');
+        document.getElementById('profileModal').classList.add('hidden');
     });
 }
 
 const cancelSettingsBtn = document.getElementById('cancelSettings');
 if (cancelSettingsBtn) {
     cancelSettingsBtn.addEventListener('click', function() {
-        const settingsModal = document.getElementById('settingsModal');
-        settingsModal.classList.add('hidden');
+        document.getElementById('settingsModal').classList.add('hidden');
     });
 }
 
@@ -923,13 +921,6 @@ function openSettingsModal() {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Échec de la modification');
-            }
-            
-            // Notification de succès
-            if (typeof showToaster === 'function') {
-                showToaster('Paramètres mis à jour avec succès');
-            } else {
-                alert('Paramètres mis à jour avec succès');
             }
             
             // Fermer le modal
