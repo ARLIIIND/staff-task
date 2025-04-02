@@ -680,13 +680,19 @@ if (openAppSettingsBtn) {
     });
 }
 
-const cancelProfileBtn = document.getElementById('cancelProfile').addEventListener('click', function() {
-    document.getElementById('profileModal').classList.add('hidden');
-});
+const cancelProfileBtn = document.getElementById('cancelProfile');
+if (cancelProfileBtn) {
+    cancelProfileBtn.addEventListener('click', function() {
+        document.getElementById('profileModal').classList.add('hidden');
+    });
+}
 
-const cancelSettingsBtn = document.getElementById('cancelSettings').addEventListener('click', function() {
-    document.getElementById('settingsModal').classList.add('hidden');
-});
+const cancelSettingsBtn = document.getElementById('cancelSettings');
+if (cancelSettingsBtn) {
+    cancelSettingsBtn.addEventListener('click', function() {
+        document.getElementById('settingsModal').classList.add('hidden');
+    });
+}
 
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
