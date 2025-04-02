@@ -324,7 +324,7 @@ app.post('/api/profile', authMiddleware, async (req, res) => {
     }
     
     if (avatarColor) user.avatarColor = avatarColor;
-    if (avatar !== undefined) user.avatar = avatar;
+    if (avatar !== undefined) user.avatar = avatar; // Accepter aussi null pour réinitialiser
     
     await user.save();
     
