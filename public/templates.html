@@ -683,8 +683,10 @@ if (openAppSettingsBtn) {
 const cancelProfileBtn = document.getElementById('cancelProfile');
 if (cancelProfileBtn) {
     cancelProfileBtn.addEventListener('click', function() {
-        const modal = document.getElementById('profileModal');
-        modal.classList.add('hidden');
+        const profileModal = document.getElementById('profileModal');
+        if (profileModal) {
+            profileModal.classList.add('hidden');
+        }
     });
 }
 
@@ -701,8 +703,6 @@ function openProfileModal() {
     const avatarPreview = document.getElementById('avatarPreview');
     const colorSelector = document.getElementById('colorSelector');
     const avatarUpload = document.getElementById('avatarUpload');
-    const saveProfileBtn = document.getElementById('saveProfile');
-
     
     const currentUser = localStorage.getItem('currentUser');
     usernameInput.value = currentUser;
@@ -762,87 +762,92 @@ function openProfileModal() {
         }
     });
     
-if (saveProfileBtn) {
-    saveProfileBtn.onclick = async function() {
-    const newUsername = usernameInput.value.trim();
-    if (!newUsername) return;
-    
-    // Obtenir la couleur sélectionnée, si aucune image n'est choisie
-    const selectedColorElement = document.querySelector('.color-option.selected');
-    const selectedColor = selectedColorElement ? selectedColorElement.dataset.color : null;
-    const oldUsername = localStorage.getItem('currentUser');
-    
-    // Vérifier si une image a été uploadée
-    const file = avatarUpload.files[0];
-    let avatarData = null;
-    
-    if (file) {
-        // Convertir l'image en base64
-        const reader = new FileReader();
-        avatarData = await new Promise((resolve) => {
-            reader.onload = (e) => resolve(e.target.result);
-            reader.readAsDataURL(file);
-        });
-    } else {
-        // Récupérer l'avatar existant s'il existe
-        avatarData = localStorage.getItem('userAvatar');
-    }
-    
-    try {
-        // Préparer les données à envoyer
-        const profileData = {
-            username: newUsername
-        };
-        
-        // Ajouter l'avatar ou la couleur selon ce qui est fourni
-        if (avatarData) {
-            profileData.avatar = avatarData;
-        } else if (selectedColor) {
-            profileData.avatarColor = selectedColor;
-        }
-        
-        // Mettre à jour le profil sur le serveur
-        const response = await fetch('https://staff-task.onrender.com/api/profile', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-username': oldUsername
-            },
-            body: JSON.stringify(profileData)
-        });
-        
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Erreur lors de la mise à jour du profil');
-        }
-        
-        // Mettre à jour les informations locales
-        localStorage.setItem('currentUser', newUsername);
-        if (selectedColor) {
-            localStorage.setItem('userColor', selectedColor);
-        }
-        if (avatarData) {
-            localStorage.setItem('userAvatar', avatarData);
-        }
-        
-        // Mettre à jour l'avatar dans l'interface
-        updateUserAvatar();
-        
-        // Fermer le modal
-        modal.classList.add('hidden');
-        
-        // Ne pas recharger la page entière
-        // Mettre à jour l'avatar et le nom d'utilisateur dynamiquement
-        document.querySelector('.nav-link.active').textContent = newUsername;
-    } catch (error) {
-        if (typeof showToaster === 'function') {
-            showToaster(error.message || 'Erreur lors de la mise à jour du profil');
-        } else {
-            alert(error.message || 'Erreur lors de la mise à jour du profil');
+    // Déplacer cette partie à l'intérieur de openProfileModal
+    const saveProfileBtn = document.getElementById('saveProfile');
+    if (saveProfileBtn) {
+        saveProfileBtn.onclick = async function() {
+            const newUsername = usernameInput.value.trim();
+            if (!newUsername) return;
+            
+            // Obtenir la couleur sélectionnée, si aucune image n'est choisie
+            const selectedColorElement = document.querySelector('.color-option.selected');
+            const selectedColor = selectedColorElement ? selectedColorElement.dataset.color : null;
+            const oldUsername = localStorage.getItem('currentUser');
+            
+            // Vérifier si une image a été uploadée
+            const file = avatarUpload.files[0];
+            let avatarData = null;
+            
+            if (file) {
+                // Convertir l'image en base64
+                const reader = new FileReader();
+                avatarData = await new Promise((resolve) => {
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
             }
-        }
-    };
-}
+            
+            try {
+                // Préparer les données à envoyer
+                const profileData = {
+                    username: newUsername
+                };
+                
+                // Ajouter l'avatar ou la couleur selon ce qui est fourni
+                if (avatarData) {
+                    profileData.avatar = avatarData;
+                } else if (selectedColor) {
+                    profileData.avatarColor = selectedColor;
+                }
+                
+                // Mettre à jour le profil sur le serveur
+                const response = await fetch('https://staff-task.onrender.com/api/profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-username': oldUsername
+                    },
+                    body: JSON.stringify(profileData)
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Erreur lors de la mise à jour du profil');
+                }
+                
+                // Mettre à jour les informations locales
+                localStorage.setItem('currentUser', newUsername);
+                if (selectedColor) {
+                    localStorage.setItem('userColor', selectedColor);
+                }
+                if (avatarData) {
+                    localStorage.setItem('userAvatar', avatarData);
+                }
+                
+                // Mettre à jour l'avatar dans l'interface
+                updateUserAvatar();
+                
+                // Fermer le modal
+                modal.classList.add('hidden');
+                
+                // Notification de succès
+                if (typeof showToaster === 'function') {
+                    showToaster('Profil mis à jour avec succès');
+                } else {
+                    alert('Profil mis à jour avec succès');
+                }
+                
+                // Recharger la page pour prendre en compte les changements
+                window.location.reload();
+            } catch (error) {
+                if (typeof showToaster === 'function') {
+                    showToaster(error.message || 'Erreur lors de la mise à jour du profil');
+                } else {
+                    alert(error.message || 'Erreur lors de la mise à jour du profil');
+                }
+            }
+        };
+    }
     
     // Afficher le modal
     modal.classList.remove('hidden');
