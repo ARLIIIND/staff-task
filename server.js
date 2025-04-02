@@ -522,7 +522,9 @@ app.post('/api/board/:projectId', authMiddleware, async (req, res) => {
 // API pour les templates
 app.get('/api/templates', async (req, res) => {
     try {
-        const templates = await Project.find({ isTemplate: true });
+        // Rechercher des documents dont l'ID commence par "template-"
+        const templates = await Project.find({ id: { $regex: /^template-/ } });
+        console.log("Templates trouvés:", templates.length);
         res.json(templates);
     } catch (error) {
         console.error('Erreur lors du chargement des templates:', error);
