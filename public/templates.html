@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-  const cancelUseTemplateBtn = document.getElementById('cancelUseTemplate');
+    const cancelUseTemplateBtn = document.getElementById('cancelUseTemplate');
     if (cancelUseTemplateBtn) {
         cancelUseTemplateBtn.addEventListener('click', function() {
             document.getElementById('useTemplateModal').classList.add('hidden');
@@ -569,11 +569,6 @@ async function useTemplate(template) {
     // Afficher le modal
     document.getElementById('useTemplateModal').classList.remove('hidden');
 }   
-
-// Ajouter ces gestionnaires d'événements après avoir défini la fonction useTemplate
-document.getElementById('cancelUseTemplate').addEventListener('click', async function() {
-    document.getElementById('useTemplateModal').classList.add('hidden');
-});
 
 document.getElementById('confirmUseTemplate').addEventListener('click', async function() {
     const templateId = document.getElementById('selectedTemplateId').value;
