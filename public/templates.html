@@ -291,6 +291,15 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('useTemplateModal').classList.add('hidden');
         });
     }
+
+    document.getElementById('confirmUseTemplate').addEventListener('click', async function() {
+    const templateId = document.getElementById('selectedTemplateId').value;
+    const projectTitle = document.getElementById('newProjectTitle').value.trim();
+    
+    if (!projectTitle) {
+        alert('Veuillez entrer un titre pour le projet.');
+        return;
+    }
     
     const currentUserAvatar = document.getElementById('currentUserAvatar');
     const firstLetter = currentUser.substring(0, 1).toUpperCase();
@@ -570,14 +579,7 @@ async function useTemplate(template) {
     document.getElementById('useTemplateModal').classList.remove('hidden');
 }   
 
-document.getElementById('confirmUseTemplate').addEventListener('click', async function() {
-    const templateId = document.getElementById('selectedTemplateId').value;
-    const projectTitle = document.getElementById('newProjectTitle').value.trim();
-    
-    if (!projectTitle) {
-        alert('Veuillez entrer un titre pour le projet.');
-        return;
-    }
+
     
     // Cacher le modal pendant le traitement
     document.getElementById('useTemplateModal').classList.add('hidden');
