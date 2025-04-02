@@ -343,6 +343,22 @@ app.post('/api/profile', authMiddleware, async (req, res) => {
   }
 });
 
+
+app.get('/api/templates/:templateId', async (req, res) => {
+    try {
+        const template = await Project.findOne({ id: req.params.templateId });
+        
+        if (!template) {
+            return res.status(404).json({ error: 'Template non trouvé' });
+        }
+        
+        res.json(template);
+    } catch (error) {
+        console.error('Erreur lors de la récupération du template:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // Route pour mettre à jour les paramètres utilisateur (email et mot de passe)
 app.post('/api/settings', authMiddleware, async (req, res) => {
   const { email, currentPassword, newPassword } = req.body;
