@@ -421,21 +421,15 @@ document.addEventListener('click', function(e) {
 });
 
 // Gestion du modal de profil
-const openProfileSettingsBtn = document.getElementById('openProfileSettings');
-if (openProfileSettingsBtn) {
-    openProfileSettingsBtn.addEventListener('click', function() {
-        profileMenu.classList.remove('show');
-        openProfileModal();
-    });
-}
+document.getElementById('openProfileSettings').addEventListener('click', function() {
+    profileMenu.classList.remove('show');
+    openProfileModal();
+});
 
-const openAppSettingsBtn = document.getElementById('openAppSettings');
-if (openAppSettingsBtn) {
-    openAppSettingsBtn.addEventListener('click', function() {
-        profileMenu.classList.remove('show');
-        openSettingsModal();
-    });
-}
+document.getElementById('openAppSettings').addEventListener('click', function() {
+    profileMenu.classList.remove('show');
+    openSettingsModal();
+});
 
 document.getElementById('cancelProfile').addEventListener('click', function() {
     document.getElementById('profileModal').classList.add('hidden');
