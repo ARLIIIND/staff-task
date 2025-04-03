@@ -693,13 +693,14 @@ document.getElementById('addMemberBtn').onclick = async function() {
     } catch (error) {
         showToaster(error.message || 'Erreur lors de l\'ajout du membre');
     }
-
-        document.getElementById('closeMembersModal').onclick = () => {
-            modal.classList.add('hidden');
 };
-    } catch (error) {
-        showToaster(error.message || 'Erreur lors du chargement des membres');
-    }
+
+// Gestionnaire d'événement pour le bouton de fermeture - séparé des autres blocs
+document.getElementById('closeMembersModal').onclick = () => {
+    const modal = document.getElementById('manageMembersModal');
+    modal.classList.add('hidden');
+};
+
 
         // Configurations des couleurs disponibles
 const avatarColors = [
