@@ -586,6 +586,14 @@ const socket = io('https://staff-task.onrender.com', {
 
 document.addEventListener('DOMContentLoaded', async function() {
 
+    const currentUser = localStorage.getItem('currentUser');
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!currentUser) {
+        window.location.href = 'index';
+        return;
+    }
+
        window.addEventListener('load', function() {
         // Double vérification après le chargement complet
         setTimeout(initUserAvatar, 100);
@@ -693,7 +701,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         alert(error.message || 'Erreur lors de la mise à jour du profil');
     }
 };
-        const currentUser = localStorage.getItem('currentUser');
 
 
         const currentUserAvatar = document.getElementById('currentUserAvatar');
