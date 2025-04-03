@@ -624,9 +624,9 @@ app.post('/api/templates', authMiddleware, async (req, res) => {
 
 app.delete('/api/templates/:templateId', authMiddleware, async (req, res) => {
     try {
+        // Il y avait une duplication de la propriété "id" dans le filtre
         const result = await Project.deleteOne({ 
-            id: req.params.templateId, 
-            id: { $regex: /^template-/ } // S'assurer que c'est bien un template
+            id: req.params.templateId
         });
         
         console.log('Résultat de la suppression:', result);
