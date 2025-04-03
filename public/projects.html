@@ -217,12 +217,13 @@
     </div>
 
     <script>
-        function showToaster(message) {
-            const toaster = document.getElementById('toaster');
-            toaster.textContent = message;
-            toaster.classList.add('show');
-            setTimeout(() => toaster.classList.remove('show'), 3000);
-        }
+function showToaster(message, isSuccess = false) {
+    const toaster = document.getElementById('toaster');
+    toaster.textContent = message;
+    toaster.style.backgroundColor = isSuccess ? '#10b981' : '#ef4444';
+    toaster.classList.add('show');
+    setTimeout(() => toaster.classList.remove('show'), 3000);
+}
 
 document.addEventListener('DOMContentLoaded', async function() {
 
@@ -495,125 +496,206 @@ async function deleteProject(projectId) {
     }
 }
 
- async function openManageMembersModal(projectId) {
+// Fonction complète pour gérer les membres
+async function openManageMembersModal(projectId) {
     const modal = document.getElementById('manageMembersModal');
     const membersList = document.getElementById('membersList');
     const currentUser = localStorage.getItem('currentUser');
     document.getElementById('currentProjectId').value = projectId;
 
-    try {
-        const response = await fetch('https://staff-task.onrender.com/api/projects', {
-            headers: { 'x-username': currentUser }
-        });
-        const projects = await response.json();
-        const project = projects.find(p => p.id === projectId);
-        
-        // Déterminer si l'utilisateur actuel est le créateur (premier membre)
-        const isCreator = project.members[0] === currentUser;
-        
-        // Générer la liste des membres
-        membersList.innerHTML = '';
-        project.members.forEach(member => {
-            const memberDiv = document.createElement('div');
-            memberDiv.className = 'flex justify-between items-center py-2';
+    // Fonction interne pour actualiser la liste des membres
+    async function refreshMembersList() {
+        try {
+            const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}`, {
+                headers: { 'x-username': currentUser }
+            });
             
-            const memberName = document.createElement('span');
-            memberName.className = 'text-gray-700';
-            memberName.textContent = member;
-            memberDiv.appendChild(memberName);
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement du projet');
+            }
             
-            // Ajouter le bouton de suppression si l'utilisateur est le créateur et ce n'est pas lui-même
-            if (isCreator && member !== currentUser) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'text-red-500 hover:text-red-700';
-                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                deleteBtn.onclick = async () => {
-                    try {
-                        const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}/members/${member}`, {
-                            method: 'DELETE',
-                            headers: { 'x-username': currentUser }
-                        });
-                        
-                        if (!response.ok) {
-                            const data = await response.json();
-                            throw new Error(data.error || 'Erreur lors de la suppression du membre');
-                        }
-                        
-                        // Actualiser la liste des membres
-                        const data = await response.json();
-                        membersList.innerHTML = '';
-                        data.members.forEach(m => {
-                            const memberDiv = document.createElement('div');
-                            memberDiv.className = 'flex justify-between items-center py-2';
+            const project = await response.json();
+            const isCreator = project.members[0] === currentUser;
+            
+            // Vider la liste des membres
+            membersList.innerHTML = '';
+            
+            // Masquer la scrollbar
+            membersList.style.cssText = `
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+                overflow-y: auto;
+            `;
+            
+            // Ajouter une règle CSS pour WebKit
+            const styleElement = document.createElement('style');
+            styleElement.textContent = `
+                #membersList::-webkit-scrollbar {
+                    display: none;
+                }
+            `;
+            document.head.appendChild(styleElement);
+            
+            // Recréer les éléments pour chaque membre
+            project.members.forEach(member => {
+                const memberItem = document.createElement('div');
+                memberItem.className = 'flex justify-between items-center py-2 border-b border-gray-100';
+                
+                const memberName = document.createElement('span');
+                memberName.className = 'text-gray-700';
+                memberName.textContent = member;
+                
+                memberItem.appendChild(memberName);
+                
+                // Ajouter un bouton de suppression si l'utilisateur est le créateur et que ce n'est pas lui-même
+                if (isCreator && member !== currentUser) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'text-red-500 hover:text-red-700';
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.setAttribute('data-member', member);
+                    
+                    // Utiliser la délégation d'événement pour éviter les problèmes
+                    deleteBtn.addEventListener('click', async function() {
+                        try {
+                            const memberToRemove = this.getAttribute('data-member');
                             
-                            const memberName = document.createElement('span');
-                            memberName.className = 'text-gray-700';
-                            memberName.textContent = m;
-                            memberDiv.appendChild(memberName);
+                            const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}/members/${memberToRemove}`, {
+                                method: 'DELETE',
+                                headers: { 'x-username': currentUser }
+                            });
                             
-                            if (isCreator && m !== currentUser) {
-                                const deleteBtn = document.createElement('button');
-                                deleteBtn.className = 'text-red-500 hover:text-red-700';
-                                deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-                                // Réattacher l'événement ici
-                                memberDiv.appendChild(deleteBtn);
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.error || 'Erreur lors de la suppression');
                             }
                             
-                            membersList.appendChild(memberDiv);
-                        });
-                    } catch (error) {
-                        showToaster(error.message || 'Erreur lors de la suppression du membre');
-                    }
-                };
-                memberDiv.appendChild(deleteBtn);
-            }
-            
-            membersList.appendChild(memberDiv);
-        });
-
-        // Désactiver le champ d'ajout si l'utilisateur n'est pas le créateur
-        document.getElementById('memberUsername').disabled = !isCreator;
-        document.getElementById('addMemberBtn').disabled = !isCreator;
-        if (!isCreator) {
-            document.getElementById('memberUsername').placeholder = "Seul le créateur peut ajouter des membres";
-        } else {
-            document.getElementById('memberUsername').placeholder = "Nom d'utilisateur";
-        }
-
-        modal.classList.remove('hidden');
-        if (isCreator) document.getElementById('memberUsername').focus();
-
-        document.getElementById('addMemberBtn').onclick = async () => {
-            if (!isCreator) return;
-            
-            const username = document.getElementById('memberUsername').value.trim();
-            if (!username) return;
-            try {
-                const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}/members`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-username': currentUser
-                    },
-                    body: JSON.stringify({ username })
-                });
-                if (!response.ok) throw new Error((await response.json()).error);
+                            // Actualiser la liste après suppression
+                            await refreshMembersList();
+                            showToaster(`${memberToRemove} a été retiré du projet`, true);
+                        } catch (error) {
+                            showToaster(error.message || 'Erreur lors de la suppression');
+                        }
+                    });
+                    
+                    memberItem.appendChild(deleteBtn);
+                }
                 
-                // Recharger le modal pour afficher les membres mis à jour
-                openManageMembersModal(projectId);
-                document.getElementById('memberUsername').value = '';
-            } catch (error) {
-                showToaster(error.message || 'Erreur lors de l\'ajout du membre');
-            }
-        };
+                membersList.appendChild(memberItem);
+            });
+            
+            // Configurer le formulaire d'ajout de membres
+            const memberInput = document.getElementById('memberUsername');
+            const addButton = document.getElementById('addMemberBtn');
+            
+            memberInput.disabled = !isCreator;
+            addButton.disabled = !isCreator;
+            
+            memberInput.placeholder = isCreator ? 
+                "Nom d'utilisateur à ajouter" : 
+                "Seul le créateur peut ajouter des membres";
+            
+            // Configurer le gestionnaire pour l'ajout de membres
+            addButton.onclick = async function() {
+                if (!isCreator) return;
+                
+                const username = memberInput.value.trim();
+                if (!username) return;
+                
+                try {
+                    const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}/members`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-username': currentUser
+                        },
+                        body: JSON.stringify({ username })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Erreur lors de l\'ajout');
+                    }
+                    
+                    // Vider le champ et actualiser la liste
+                    memberInput.value = '';
+                    await refreshMembersList();
+                    showToaster('Membre ajouté avec succès', true);
+                } catch (error) {
+                    showToaster(error.message || 'Erreur lors de l\'ajout du membre');
+                }
+            };
+        } catch (error) {
+            showToaster(error.message || 'Erreur lors du chargement des membres');
+        }
+    }
+    
+    // Initialiser le modal
+    await refreshMembersList();
+    modal.classList.remove('hidden');
+    
+    // Configurer le bouton de fermeture
+    document.getElementById('closeMembersModal').onclick = function() {
+        modal.classList.add('hidden');
+    };
+}
+
+
+// Fonction séparée pour supprimer un membre
+async function deleteMember(projectId, memberUsername) {
+    const currentUser = localStorage.getItem('currentUser');
+    try {
+        const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}/members/${memberUsername}`, {
+            method: 'DELETE',
+            headers: { 'x-username': currentUser }
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Erreur lors de la suppression du membre');
+        }
+        
+        // Recharger la liste des membres
+        openManageMembersModal(projectId);
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors de la suppression du membre');
+    }
+}
+
+// Mettre à jour le gestionnaire d'événement pour "addMemberBtn"
+document.getElementById('addMemberBtn').onclick = async function() {
+    const projectId = document.getElementById('currentProjectId').value;
+    const username = document.getElementById('memberUsername').value.trim();
+    if (!username) return;
+    
+    try {
+        const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}/members`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-username': localStorage.getItem('currentUser')
+            },
+            body: JSON.stringify({ username })
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error);
+        }
+        
+        // Effacer le champ et recharger la liste
+        document.getElementById('memberUsername').value = '';
+        openManageMembersModal(projectId);
+    } catch (error) {
+        showToaster(error.message || 'Erreur lors de l\'ajout du membre');
+    }
 
         document.getElementById('closeMembersModal').onclick = () => {
             modal.classList.add('hidden');
-        };
+};
     } catch (error) {
         showToaster(error.message || 'Erreur lors du chargement des membres');
     }
-}
 
         // Configurations des couleurs disponibles
 const avatarColors = [

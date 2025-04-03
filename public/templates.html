@@ -731,19 +731,15 @@ initUserAvatar();
     document.getElementById('deleteTemplateId').value = templateId;
     document.getElementById('deleteTemplateModal').classList.remove('hidden');
 
-    // Ajouter des logs pour déboguer
-    console.log("Modal de suppression ouvert pour le template:", templateId);
-
     document.getElementById('cancelDeleteTemplate').onclick = function() {
         document.getElementById('deleteTemplateModal').classList.add('hidden');
     };
 
     document.getElementById('confirmDeleteTemplate').onclick = async function() {
         try {
-            const templateToDelete = document.getElementById('deleteTemplateId').value;
-            console.log("Tentative de suppression du template:", templateToDelete);
-            
             const currentUser = localStorage.getItem('currentUser');
+            const templateToDelete = document.getElementById('deleteTemplateId').value;
+            
             const response = await fetch(`https://staff-task.onrender.com/api/templates/${templateToDelete}`, {
                 method: 'DELETE',
                 headers: { 
@@ -751,21 +747,50 @@ initUserAvatar();
                 }
             });
             
-            console.log("Réponse de suppression:", response.status);
-            
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Erreur lors de la suppression du template');
             }
             
+            // Fermer le modal
             document.getElementById('deleteTemplateModal').classList.add('hidden');
+            
+            // Afficher un message de succès
             showToaster('Template supprimé avec succès', true);
-            await loadTemplates(); // Recharger les templates
+            
+            // Recharger les templates de façon forcée
+            await loadTemplates();
+            
+            // Pour assurer l'actualisation visuelle, vider et recharger le conteneur
+            const templatesGrid = document.getElementById('templatesGrid');
+            templatesGrid.innerHTML = '';
+            await loadTemplates();
         } catch (error) {
-            console.error('Erreur détaillée lors de la suppression:', error);
-            showToaster('Erreur: ' + error.message);
+            console.error('Erreur lors de la suppression:', error);
+            showToaster('Erreur lors de la suppression du template: ' + error.message);
         }
     };
+}
+
+function showToaster(message, isSuccess = false) {
+    // Créer ou obtenir l'élément toaster
+    let toaster = document.getElementById('toaster');
+    if (!toaster) {
+        toaster = document.createElement('div');
+        toaster.id = 'toaster';
+        toaster.className = 'toaster';
+        document.body.appendChild(toaster);
+    }
+    
+    // Définir l'apparence et le message
+    toaster.className = `toaster ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
+    toaster.textContent = message;
+    toaster.classList.add('show');
+    
+    // Masquer après 3 secondes
+    setTimeout(() => {
+        toaster.classList.remove('show');
+    }, 3000);
 }
 
 async function useTemplate(template) {
