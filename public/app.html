@@ -777,6 +777,55 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 });
 
+
+        // Cache pour les informations d'avatar des utilisateurs
+const userAvatarCache = {};
+
+async function getUserAvatarInfo(username) {
+    // Si déjà en cache, retourner l'info cachée
+    if (userAvatarCache[username]) {
+        return userAvatarCache[username];
+    }
+    
+    // Si c'est l'utilisateur courant, utiliser les infos locales
+    if (username === localStorage.getItem('currentUser')) {
+        const info = {
+            avatar: localStorage.getItem('userAvatar'),
+            avatarColor: localStorage.getItem('userColor') || getUserColor(username)
+        };
+        userAvatarCache[username] = info;
+        return info;
+    }
+    
+    // Sinon, essayer de récupérer les informations
+    try {
+        // Adapter cette URL à votre API si nécessaire
+        const response = await fetch(`https://staff-task.onrender.com/api/profile?username=${username}`, {
+            headers: { 'x-username': localStorage.getItem('currentUser') }
+        });
+        
+        if (response.ok) {
+            const userInfo = await response.json();
+            const info = {
+                avatar: userInfo.avatar,
+                avatarColor: userInfo.avatarColor || getUserColor(username)
+            };
+            userAvatarCache[username] = info;
+            return info;
+        }
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des infos pour ${username}:`, error);
+    }
+    
+    // Par défaut, retourner une couleur générée
+    const defaultInfo = { 
+        avatar: null, 
+        avatarColor: getUserColor(username) 
+    };
+    userAvatarCache[username] = defaultInfo;
+    return defaultInfo;
+}
+
         async function loadBoardData(projectId) {
             const currentUser = localStorage.getItem('currentUser');
             const response = await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
@@ -909,130 +958,166 @@ function updateUserAvatar() {
         }
 
         function createTaskElement(task) {
-            const taskElement = document.createElement('div');
-            taskElement.className = 'task-card p-3 mb-2 rounded shadow-sm new-card';
-            taskElement.dataset.id = task.id;
-            
-            const taskTitle = document.createElement('div');
-            taskTitle.className = 'font-medium text-gray-800 mb-1';
-            taskTitle.textContent = task.title;
-            
-            if (task.assignee) {
-                const assigneeContainer = document.createElement('div');
-                assigneeContainer.className = 'task-assignee-container';
-                const assignee = document.createElement('div');
-                assignee.className = 'task-assignee bg-indigo-600';
-                assignee.textContent = task.assignee.substring(0, 1);
+    const taskElement = document.createElement('div');
+    taskElement.className = 'task-card p-3 mb-2 rounded shadow-sm new-card';
+    taskElement.dataset.id = task.id;
+    
+    const taskTitle = document.createElement('div');
+    taskTitle.className = 'font-medium text-gray-800 mb-1';
+    taskTitle.textContent = task.title;
+    
+    if (task.assignee) {
+        const assigneeContainer = document.createElement('div');
+        assigneeContainer.className = 'task-assignee-container';
+        
+        // Créer l'élément d'avatar
+        const assignee = document.createElement('div');
+        assignee.className = 'task-assignee';
+        
+        // Utiliser la couleur par défaut en attendant de charger l'avatar
+        assignee.style.backgroundColor = getUserColor(task.assignee);
+        assignee.textContent = task.assignee.substring(0, 1).toUpperCase();
+        
+        // Si c'est l'utilisateur actuel, on peut directement utiliser son avatar
+        if (task.assignee === localStorage.getItem('currentUser')) {
+            const userAvatar = localStorage.getItem('userAvatar');
+            if (userAvatar) {
+                assignee.textContent = '';
+                assignee.style.padding = '0';
+                assignee.style.overflow = 'hidden';
                 
-                const currentUser = localStorage.getItem('currentUser');
-                const hasIncompleteSubtasks = task.subtasks && task.subtasks.some(st => !st.completed);
-                const canComplete = task.assignee === currentUser && !hasIncompleteSubtasks;
-                
-                const checkBtn = document.createElement('div');
-                checkBtn.className = `check-btn ${!canComplete ? 'disabled' : ''}`;
-                checkBtn.innerHTML = '<i class="fas fa-check"></i>';
-                if (canComplete) {
-                    checkBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
-                        const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
-                        moveTask(task.id, sourceColumnId, targetColumnId);
-                        saveBoardData();
-                        initBoard();
-                        updateStats();
-                    });
-                }
-                
-                assigneeContainer.appendChild(assignee);
-                assigneeContainer.appendChild(checkBtn);
-                taskElement.appendChild(assigneeContainer);
+                const img = document.createElement('img');
+                img.src = userAvatar;
+                img.className = 'w-full h-full object-cover rounded-full';
+                assignee.appendChild(img);
             }
-            
-            const taskDescription = document.createElement('div');
-            taskDescription.className = 'text-sm text-gray-600';
-            taskDescription.textContent = task.description || '';
-            
-            taskElement.appendChild(taskTitle);
-            if (task.description) taskElement.appendChild(taskDescription);
-            
-            if (task.subtasks && task.subtasks.length > 0) {
-                const subtasksContainer = document.createElement('div');
-                subtasksContainer.className = 'mt-2 subtasks-container';
-                subtasksContainer.dataset.taskId = task.id;
-                
-                task.subtasks.forEach((subtask, index) => {
-                    const subtaskElement = document.createElement('div');
-                    subtaskElement.className = `subtask ${subtask.completed ? 'completed' : ''} ${index > 1 ? 'subtask-hidden' : ''}`;
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = subtask.completed;
-                    checkbox.addEventListener('change', (e) => {
-                        e.stopPropagation();
-                        subtask.completed = e.target.checked;
-                        subtaskElement.classList.toggle('completed', subtask.completed);
-                        saveBoardData();
-                        updateStats();
-                        const hasIncompleteSubtasks = task.subtasks.some(st => !st.completed);
-                        const checkBtn = taskElement.querySelector('.check-btn');
-                        if (checkBtn) {
-                            checkBtn.classList.toggle('disabled', hasIncompleteSubtasks);
-                            if (!hasIncompleteSubtasks && task.assignee === localStorage.getItem('currentUser')) {
-                                checkBtn.addEventListener('click', (e) => {
-                                    e.stopPropagation();
-                                    const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
-                                    const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
-                                    moveTask(task.id, sourceColumnId, targetColumnId);
-                                    saveBoardData();
-                                    initBoard();
-                                    updateStats();
-                                });
-                            }
-                        }
-                    });
-                    subtaskElement.appendChild(checkbox);
-                    const subtaskText = document.createElement('span');
-                    subtaskText.textContent = ` ${subtask.title}`;
-                    subtaskElement.appendChild(subtaskText);
-                    subtasksContainer.appendChild(subtaskElement);
-                });
-                
-                if (task.subtasks.length > 2) {
-                    const toggleButton = document.createElement('div');
-                    toggleButton.className = 'toggle-subtasks';
-                    toggleButton.textContent = 'Voir plus';
-                    toggleButton.dataset.expanded = 'false';
-                    toggleButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const isExpanded = toggleButton.dataset.expanded === 'true';
-                        const subtasks = subtasksContainer.querySelectorAll('.subtask');
-                        subtasks.forEach((subtask, index) => {
-                            if (index > 1) {
-                                if (isExpanded) {
-                                    subtask.classList.add('subtask-hidden');
-                                } else {
-                                    subtask.classList.remove('subtask-hidden');
-                                }
-                            }
-                        });
-                        toggleButton.textContent = isExpanded ? 'Voir plus' : 'Voir moins';
-                        toggleButton.dataset.expanded = !isExpanded;
-                    });
-                    subtasksContainer.appendChild(toggleButton);
-                }
-                
-                taskElement.appendChild(subtasksContainer);
-            }
-            
-            taskElement.addEventListener('click', (e) => {
-                if (e.ctrlKey || e.metaKey) {
-                    taskElement.classList.toggle('selected');
-                } else if (!e.target.closest('.subtask input') && !e.target.closest('.check-btn')) {
-                    openEditTaskModal(task);
+        } else {
+            // Pour les autres utilisateurs, récupérer les infos d'avatar
+            getUserAvatarInfo(task.assignee).then(info => {
+                if (info.avatar) {
+                    assignee.textContent = '';
+                    assignee.style.padding = '0';
+                    assignee.style.overflow = 'hidden';
+                    
+                    const img = document.createElement('img');
+                    img.src = info.avatar;
+                    img.className = 'w-full h-full object-cover rounded-full';
+                    assignee.appendChild(img);
+                } else if (info.avatarColor) {
+                    assignee.style.backgroundColor = info.avatarColor;
                 }
             });
-            
-            return taskElement;
         }
+        
+        const currentUser = localStorage.getItem('currentUser');
+        const hasIncompleteSubtasks = task.subtasks && task.subtasks.some(st => !st.completed);
+        const canComplete = task.assignee === currentUser && !hasIncompleteSubtasks;
+        
+        const checkBtn = document.createElement('div');
+        checkBtn.className = `check-btn ${!canComplete ? 'disabled' : ''}`;
+        checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+        if (canComplete) {
+            checkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
+                const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
+                moveTask(task.id, sourceColumnId, targetColumnId);
+                saveBoardData();
+                initBoard();
+                updateStats();
+            });
+        }
+        
+        assigneeContainer.appendChild(assignee);
+        assigneeContainer.appendChild(checkBtn);
+        taskElement.appendChild(assigneeContainer);
+    }
+    
+    const taskDescription = document.createElement('div');
+    taskDescription.className = 'text-sm text-gray-600';
+    taskDescription.textContent = task.description || '';
+    
+    taskElement.appendChild(taskTitle);
+    if (task.description) taskElement.appendChild(taskDescription);
+    
+    if (task.subtasks && task.subtasks.length > 0) {
+        const subtasksContainer = document.createElement('div');
+        subtasksContainer.className = 'mt-2 subtasks-container';
+        subtasksContainer.dataset.taskId = task.id;
+        
+        task.subtasks.forEach((subtask, index) => {
+            const subtaskElement = document.createElement('div');
+            subtaskElement.className = `subtask ${subtask.completed ? 'completed' : ''} ${index > 1 ? 'subtask-hidden' : ''}`;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = subtask.completed;
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                subtask.completed = e.target.checked;
+                subtaskElement.classList.toggle('completed', subtask.completed);
+                saveBoardData();
+                updateStats();
+                const hasIncompleteSubtasks = task.subtasks.some(st => !st.completed);
+                const checkBtn = taskElement.querySelector('.check-btn');
+                if (checkBtn) {
+                    checkBtn.classList.toggle('disabled', hasIncompleteSubtasks);
+                    if (!hasIncompleteSubtasks && task.assignee === localStorage.getItem('currentUser')) {
+                        checkBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const sourceColumnId = boardData.columns.find(col => col.tasks.some(t => t.id === task.id)).id;
+                            const targetColumnId = boardData.columns[boardData.columns.length - 1].id;
+                            moveTask(task.id, sourceColumnId, targetColumnId);
+                            saveBoardData();
+                            initBoard();
+                            updateStats();
+                        });
+                    }
+                }
+            });
+            subtaskElement.appendChild(checkbox);
+            const subtaskText = document.createElement('span');
+            subtaskText.textContent = ` ${subtask.title}`;
+            subtaskElement.appendChild(subtaskText);
+            subtasksContainer.appendChild(subtaskElement);
+        });
+        
+        if (task.subtasks.length > 2) {
+            const toggleButton = document.createElement('div');
+            toggleButton.className = 'toggle-subtasks';
+            toggleButton.textContent = 'Voir plus';
+            toggleButton.dataset.expanded = 'false';
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isExpanded = toggleButton.dataset.expanded === 'true';
+                const subtasks = subtasksContainer.querySelectorAll('.subtask');
+                subtasks.forEach((subtask, index) => {
+                    if (index > 1) {
+                        if (isExpanded) {
+                            subtask.classList.add('subtask-hidden');
+                        } else {
+                            subtask.classList.remove('subtask-hidden');
+                        }
+                    }
+                });
+                toggleButton.textContent = isExpanded ? 'Voir plus' : 'Voir moins';
+                toggleButton.dataset.expanded = !isExpanded;
+            });
+            subtasksContainer.appendChild(toggleButton);
+        }
+        
+        taskElement.appendChild(subtasksContainer);
+    }
+    
+    taskElement.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            taskElement.classList.toggle('selected');
+        } else if (!e.target.closest('.subtask input') && !e.target.closest('.check-btn')) {
+            openEditTaskModal(task);
+        }
+    });
+    
+    return taskElement;
+}
 
         function initDragAndDrop() {
             const taskLists = document.querySelectorAll('.task-list');
@@ -1149,7 +1234,7 @@ function updateUserAvatar() {
             }, 3000);
         }
 
-        function updateStats() {
+    function updateStats() {
     const teamProgressContainer = document.getElementById('teamProgress');
     const statsContainer = document.getElementById('userStats');
     teamProgressContainer.innerHTML = '';
@@ -1226,6 +1311,38 @@ function updateUserAvatar() {
             avatar.className = 'user-avatar';
             avatar.textContent = username.substring(0, 1).toUpperCase();
             avatar.style.backgroundColor = getUserColor(username);
+            
+            // Si c'est l'utilisateur actuel, on utilise son avatar directement
+            if (username === localStorage.getItem('currentUser')) {
+                const userAvatar = localStorage.getItem('userAvatar');
+                if (userAvatar) {
+                    avatar.textContent = '';
+                    avatar.style.padding = '0';
+                    avatar.style.overflow = 'hidden';
+                    
+                    const img = document.createElement('img');
+                    img.src = userAvatar;
+                    img.className = 'w-full h-full object-cover rounded-full';
+                    avatar.appendChild(img);
+                }
+            } else {
+                // Pour les autres utilisateurs, récupérer les infos d'avatar
+                getUserAvatarInfo(username).then(info => {
+                    if (info.avatar) {
+                        avatar.textContent = '';
+                        avatar.style.padding = '0';
+                        avatar.style.overflow = 'hidden';
+                        
+                        const img = document.createElement('img');
+                        img.src = info.avatar;
+                        img.className = 'w-full h-full object-cover rounded-full';
+                        avatar.appendChild(img);
+                    } else if (info.avatarColor) {
+                        avatar.style.backgroundColor = info.avatarColor;
+                    }
+                });
+            }
+            
             headerDiv.appendChild(avatar);
             
             // Ajouter le nom d'utilisateur
@@ -1281,28 +1398,28 @@ function updateUserAvatar() {
             statsContainer.appendChild(statsDiv);
         }
     }
+}
     
     // Fonction pour obtenir la couleur d'un utilisateur
     function getUserColor(username) {
-        const avatarColors = [
-            '#4c6ef5', '#4dabf7', '#e64980', '#fab005', '#82c91e', 
-            '#be4bdb', '#fd7e14', '#20c997', '#fa5252', '#845ef7'
-        ];
-        
-        // Pour l'utilisateur actuel, utiliser sa couleur enregistrée
-        if (username === localStorage.getItem('currentUser')) {
-            return localStorage.getItem('userColor') || '#4c6ef5';
-        }
-        
-        // Pour les autres utilisateurs, générer une couleur stable basée sur le nom
-        let hash = 0;
-        for (let i = 0; i < username.length; i++) {
-            hash = username.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        
-        const index = Math.abs(hash) % avatarColors.length;
-        return avatarColors[index];
+    const avatarColors = [
+        '#4c6ef5', '#4dabf7', '#e64980', '#fab005', '#82c91e', 
+        '#be4bdb', '#fd7e14', '#20c997', '#fa5252', '#845ef7'
+    ];
+    
+    // Pour l'utilisateur actuel, utiliser sa couleur enregistrée
+    if (username === localStorage.getItem('currentUser')) {
+        return localStorage.getItem('userColor') || '#4c6ef5';
     }
+    
+    // Pour les autres utilisateurs, générer une couleur stable basée sur le nom
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+        hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const index = Math.abs(hash) % avatarColors.length;
+    return avatarColors[index];
 }
 
         function openAddTaskModal(columnId) {
