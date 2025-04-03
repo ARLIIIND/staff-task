@@ -1431,6 +1431,8 @@ function updateUserAvatar() {
             const taskColumnSelect = document.getElementById('taskColumnSelect');
             const taskAssigneeSelect = document.getElementById('taskAssignee');
             const subtasksList = document.getElementById('subtasksList');
+            const projectId = localStorage.getItem('currentProject');
+            const currentUser = localStorage.getItem('currentUser');
             
             modalTitle.textContent = 'Ajouter une tâche';
             taskTitleInput.value = '';
@@ -1518,6 +1520,9 @@ function updateUserAvatar() {
             const taskAssigneeSelect = document.getElementById('taskAssignee');
             const subtasksList = document.getElementById('subtasksList');
             const deleteTaskBtn = document.getElementById('deleteTask');
+            const projectId = localStorage.getItem('currentProject');
+            const currentUser = localStorage.getItem('currentUser');
+
             
             modalTitle.textContent = 'Modifier la tâche';
             taskTitleInput.value = task.title;
