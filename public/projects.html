@@ -224,25 +224,123 @@
             setTimeout(() => toaster.classList.remove('show'), 3000);
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) {
-                window.location.href = 'index';
-                return;
-            }
+document.addEventListener('DOMContentLoaded', function() {
+
+       window.addEventListener('load', function() {
+        // Double vérification après le chargement complet
+        setTimeout(initUserAvatar, 100);
+    });
+
+
+     document.getElementById('cancelProfile')?.addEventListener('click', function() {
+        document.getElementById('profileModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelSettings')?.addEventListener('click', function() {
+        document.getElementById('settingsModal').classList.add('hidden');
+    });
+
+
+            document.getElementById('saveProfile').onclick = async function() {
+    const newUsername = document.getElementById('profileUsername').value.trim();
+    if (!newUsername) return;
+    
+    // Obtenir la couleur sélectionnée
+    const selectedColorElement = document.querySelector('.color-option.selected');
+    const selectedColor = selectedColorElement ? selectedColorElement.dataset.color : null;
+    const oldUsername = localStorage.getItem('currentUser');
+    
+    // Vérifier si une image a été uploadée
+    const avatarUpload = document.getElementById('avatarUpload');
+    const file = avatarUpload.files[0];
+    
+    try {
+        let avatarData = null;
+        
+        // Si un fichier est sélectionné, le lire
+        if (file) {
+            avatarData = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        } 
+        // Si le bouton de suppression a été utilisé (vérifié par la visibilité)
+        else if (document.getElementById('removeAvatar').style.display === 'none') {
+            avatarData = null; // Explicitement null pour supprimer
+        } 
+        // Sinon, garder l'avatar existant
+        else {
+            avatarData = localStorage.getItem('userAvatar');
+        }
+        
+        // Préparer les données à envoyer
+        const profileData = {
+            username: newUsername
+        };
+        
+        // Ajout conditionnel selon les données disponibles
+        if (avatarData === null) {
+            profileData.avatar = null; // Supprimer l'avatar
+        } else if (avatarData) {
+            profileData.avatar = avatarData;
+        }
+        
+        if (selectedColor) {
+            profileData.avatarColor = selectedColor;
+        }
+        
+        // Mettre à jour le profil sur le serveur
+        const response = await fetch('https://staff-task.onrender.com/api/profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-username': oldUsername
+            },
+            body: JSON.stringify(profileData)
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Erreur lors de la mise à jour du profil');
+        }
+        
+        // Mettre à jour les informations locales AVANT de recharger la page
+        localStorage.setItem('currentUser', newUsername);
+        
+        if (selectedColor) {
+            localStorage.setItem('userColor', selectedColor);
+        }
+        
+        // Gérer correctement l'avatar
+        if (avatarData === null) {
+            localStorage.removeItem('userAvatar');
+        } else if (avatarData) {
+            localStorage.setItem('userAvatar', avatarData);
+        }
+        
+        // Fermer le modal
+        document.getElementById('profileModal').classList.add('hidden');
+        
+        // Forcer la mise à jour visuelle AVANT le rechargement de la page
+        updateUserAvatar();
+        
+        // Recharger la page après un court délai pour permettre l'affichage
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
+        
+    } catch (error) {
+        alert(error.message || 'Erreur lors de la mise à jour du profil');
+    }
+};
             
             // Récupérer et styler l'avatar de l'utilisateur
             const currentUserAvatar = document.getElementById('currentUserAvatar');
-            const firstLetter = currentUser.substring(0, 1).toUpperCase();
-            currentUserAvatar.textContent = firstLetter;
-            currentUserAvatar.title = currentUser; // Ajoutez cette ligne
-            
-            // Ajouter la classe pour le style général de l'avatar
-            currentUserAvatar.classList.add('user-avatar');
-            
-            // Ajouter une classe spécifique en fonction de la première lettre
-            currentUserAvatar.classList.add(`user-${firstLetter}`);
-            
+            currentUserAvatar.title = currentUser;
+            initUserAvatar();
+
+
             // INSÉREZ LE DEUXIÈME BLOC ICI
             // Connexion à Socket.IO
             const socket = io('https://staff-task.onrender.com', {
@@ -451,11 +549,49 @@ if (cancelSettingsBtn) {
     });
 }
 
+function updateUserAvatar() {
+    const currentUser = localStorage.getItem('currentUser');
+    const userAvatar = localStorage.getItem('userAvatar');
+    const userColor = localStorage.getItem('userColor');
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
+
+    if (!currentUser || !currentUserAvatar) return;
+
+    // Réinitialisation complète et propre
+    currentUserAvatar.innerHTML = '';
+    currentUserAvatar.textContent = '';  
+    currentUserAvatar.style.backgroundColor = '';
+
+    console.log("Avatar update - userAvatar:", !!userAvatar);
+
+    // Afficher soit l'avatar personnalisé, soit l'initiale colorée
+    if (userAvatar) {
+        // Création d'un nouvel élément image
+        const img = document.createElement('img');
+        img.src = userAvatar;
+        img.className = 'w-full h-full object-cover rounded-full';
+        img.alt = currentUser.substring(0, 1).toUpperCase();
+        
+        // Style de conteneur pour l'image
+        currentUserAvatar.style.padding = '0';
+        currentUserAvatar.style.overflow = 'hidden';
+        
+        // Ajouter l'image au DOM
+        currentUserAvatar.appendChild(img);
+    } else {
+        // Utiliser l'avatar par défaut (initiale colorée)
+        currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
+        currentUserAvatar.style.backgroundColor = userColor || '#4c6ef5';
+        currentUserAvatar.style.padding = '';
+    }
+}
+
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
     const usernameInput = document.getElementById('profileUsername');
     const avatarPreview = document.getElementById('avatarPreview');
     const colorSelector = document.getElementById('colorSelector');
+    const avatarUpload = document.getElementById('avatarUpload');
     
     const currentUser = localStorage.getItem('currentUser');
     usernameInput.value = currentUser;
@@ -468,9 +604,38 @@ function openProfileModal() {
         localStorage.setItem('userColor', userColor);
     }
     
-    // Afficher l'aperçu de l'avatar
-    avatarPreview.style.backgroundColor = userColor;
-    avatarPreview.textContent = currentUser.substring(0, 1).toUpperCase();
+    // Récupérer l'avatar personnalisé s'il existe
+    const userAvatar = localStorage.getItem('userAvatar');
+    
+    // Afficher l'aperçu de l'avatar (image personnalisée ou initiale colorée)
+    avatarPreview.innerHTML = '';
+    if (userAvatar) {
+        const img = document.createElement('img');
+        img.src = userAvatar;
+        img.className = 'w-full h-full object-cover rounded-full';
+        avatarPreview.appendChild(img);
+    } else {
+        avatarPreview.style.backgroundColor = userColor;
+        avatarPreview.textContent = currentUser.substring(0, 1).toUpperCase();
+    }
+    
+    // Ajouter le bouton de suppression d'avatar personnalisé s'il n'existe pas déjà
+    let removeAvatarBtn = document.getElementById('removeAvatar');
+    
+    if (removeAvatarBtn) {
+        // Afficher/masquer le bouton selon qu'un avatar personnalisé existe
+        removeAvatarBtn.style.display = userAvatar ? 'inline-block' : 'none';
+        
+        // Gestion du clic sur le bouton de suppression
+        removeAvatarBtn.onclick = function() {
+            localStorage.removeItem('userAvatar');
+            avatarPreview.innerHTML = '';
+            avatarPreview.style.backgroundColor = userColor;
+            avatarPreview.textContent = currentUser.substring(0, 1).toUpperCase();
+            removeAvatarBtn.style.display = 'none';
+            avatarUpload.value = '';
+        };
+    }
     
     // Générer les options de couleurs
     colorSelector.innerHTML = '';
@@ -483,65 +648,46 @@ function openProfileModal() {
         colorOption.addEventListener('click', function() {
             document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
             colorOption.classList.add('selected');
-            avatarPreview.style.backgroundColor = color;
+            
+            // N'appliquer la couleur que si pas d'avatar personnalisé
+            if (!avatarPreview.querySelector('img')) {
+                avatarPreview.style.backgroundColor = color;
+            }
         });
         
         colorSelector.appendChild(colorOption);
     });
-    
-    // Déplacer cette partie à l'intérieur de openProfileModal
-    const saveProfileBtn = document.getElementById('saveProfile');
-    if (saveProfileBtn) {
-        saveProfileBtn.onclick = async function() {
-            const newUsername = usernameInput.value.trim();
-            if (!newUsername) return;
-            
-            const selectedColor = document.querySelector('.color-option.selected').dataset.color;
-            const oldUsername = localStorage.getItem('currentUser');
-            
-            try {
-                // Mettre à jour le profil sur le serveur
-                const response = await fetch('https://staff-task.onrender.com/api/profile', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-username': oldUsername // En-tête d'authentification
-                    },
-                    body: JSON.stringify({
-                        username: newUsername,
-                        avatarColor: selectedColor
-                    })
-                });
-                
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Erreur lors de la mise à jour du profil');
+
+    // Gestion du changement d'avatar
+    if (avatarUpload) {
+        avatarUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Vérifier que c'est bien une image
+                if (!file.type.startsWith('image/')) {
+                    alert('Veuillez sélectionner une image.');
+                    return;
                 }
                 
-                // Mettre à jour les informations locales seulement après confirmation du serveur
-                localStorage.setItem('currentUser', newUsername);
-                localStorage.setItem('userColor', selectedColor);
-                
-                // Mettre à jour l'avatar dans l'interface
-                currentUserAvatar.textContent = newUsername.substring(0, 1).toUpperCase();
-                currentUserAvatar.style.backgroundColor = selectedColor;
-                
-                // Fermer le modal
-                modal.classList.add('hidden');
-                
-                // Notification de succès
-                if (typeof showToaster === 'function') {
-                    showToaster('Profil mis à jour avec succès');
-                }
-                
-                // Recharger la page pour prendre en compte les changements
-                window.location.reload();
-            } catch (error) {
-                if (typeof showToaster === 'function') {
-                    showToaster(error.message || 'Erreur lors de la mise à jour du profil');
-                }
+                // Créer un aperçu de l'image
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Modifier l'aperçu pour afficher l'image
+                    avatarPreview.innerHTML = '';
+                    avatarPreview.style.backgroundColor = 'transparent';
+                    avatarPreview.textContent = '';
+                    
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'w-full h-full object-cover rounded-full';
+                    avatarPreview.appendChild(img);
+                    
+                    // Afficher le bouton de suppression
+                    if (removeAvatarBtn) removeAvatarBtn.style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
             }
-        };
+        });
     }
     
     // Afficher le modal
@@ -595,13 +741,36 @@ function openSettingsModal() {
     modal.classList.remove('hidden');
 }
 
-// Initialiser l'avatar de l'utilisateur avec sa couleur personnalisée
 function initUserAvatar() {
     const currentUser = localStorage.getItem('currentUser');
+    const userAvatar = localStorage.getItem('userAvatar');
     const userColor = localStorage.getItem('userColor');
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
     
-    if (currentUser && currentUserAvatar) {
-        currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
+    if (!currentUser || !currentUserAvatar) return;
+    
+    // Réinitialiser TOUT d'abord
+    currentUserAvatar.innerHTML = '';
+    currentUserAvatar.textContent = '';
+    currentUserAvatar.className = 'user-avatar cursor-pointer'; // Garder uniquement les classes de base
+    currentUserAvatar.style = ''; // Réinitialiser tous les styles en ligne
+    
+    // Ajouter le titre
+    currentUserAvatar.title = currentUser;
+    
+    if (userAvatar) {
+        // Version avec avatar personnalisé
+        currentUserAvatar.style.padding = '0';
+        currentUserAvatar.style.overflow = 'hidden';
+        
+        const img = document.createElement('img');
+        img.src = userAvatar;
+        img.className = 'w-full h-full object-cover rounded-full';
+        currentUserAvatar.appendChild(img);
+    } else {
+        // Version avec initiale
+        const firstLetter = currentUser.substring(0, 1).toUpperCase();
+        currentUserAvatar.textContent = firstLetter;
         
         if (userColor) {
             currentUserAvatar.style.backgroundColor = userColor;
@@ -613,9 +782,8 @@ function initUserAvatar() {
         }
     }
 }
-
-// Initialiser l'avatar au chargement
-initUserAvatar();
+    // Initialiser l'avatar au chargement
+    initUserAvatar();
 
 
     </script>
@@ -646,6 +814,11 @@ initUserAvatar();
             <label class="block text-sm font-medium text-gray-700 mb-1">Télécharger une image</label>
             <input type="file" id="avatarUpload" accept="image/*" class="w-full p-1 border border-gray-300 rounded-md">
         </div>
+                    <div class="mt-2 text-center">
+                <button id="removeAvatar" type="button" class="text-red-500 text-sm hover:text-red-700">
+                    <i class="fas fa-times-circle mr-1"></i> Supprimer l'avatar personnalisé
+                </button>
+            </div>
         
         <div class="mt-4 flex justify-end space-x-3">
             <button id="cancelProfile" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
