@@ -584,7 +584,7 @@ const socket = io('https://staff-task.onrender.com', {
     query: { username: localStorage.getItem('currentUser') }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
 
        window.addEventListener('load', function() {
         // Double vérification après le chargement complet
