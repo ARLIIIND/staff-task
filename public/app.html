@@ -693,6 +693,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         alert(error.message || 'Erreur lors de la mise à jour du profil');
     }
 };
+        const currentUser = localStorage.getItem('currentUser');
 
 
         const currentUserAvatar = document.getElementById('currentUserAvatar');
