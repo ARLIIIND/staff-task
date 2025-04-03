@@ -755,9 +755,7 @@ initUserAvatar();
             // Fermer le modal
             document.getElementById('deleteTemplateModal').classList.add('hidden');
             
-            // Afficher un message de succès
-            showToaster('Template supprimé avec succès', true);
-            
+            // Afficher un message de succès            
             // Recharger les templates de façon forcée
             await loadTemplates();
             

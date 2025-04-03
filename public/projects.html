@@ -507,8 +507,8 @@ async function openManageMembersModal(projectId) {
         // Fonction interne pour actualiser la liste des membres
         async function refreshMembersList() {
             try {
-                const response = await fetch(`https://staff-task.onrender.com/api/projects/${projectId}`, {
-                    headers: { 'x-username': currentUser }
+                    const response = await fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
+                        headers: { 'x-username': currentUser }
                 });
                 
                 if (!response.ok) {
