@@ -1449,20 +1449,34 @@ function updateUserAvatar() {
                 taskColumnSelect.appendChild(option);
             });
             
-            taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
-                fetch(`https://staff-task.onrender.com/api/project/${projectId}/members`, {
-                    headers: { 'x-username': localStorage.getItem('currentUser') }
-                })
-                .then(response => response.json())
-                .then(members => {
-                    members.forEach(member => {
+           taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
+            // Récupérer les membres du projet depuis l'API du board
+            fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
+                headers: { 'x-username': currentUser }
+            })
+            .then(response => response.json())
+            .then(boardData => {
+                // Vérifier si boardData.members existe
+                if (boardData.members && Array.isArray(boardData.members)) {
+                    boardData.members.forEach(member => {
                         const option = document.createElement('option');
-                        option.value = member.username;
-                        option.textContent = member.username;
+                        option.value = member;
+                        option.textContent = member;
                         taskAssigneeSelect.appendChild(option);
                     });
-                });
-            
+                } else {
+                    console.error('Aucune liste de membres trouvée dans la réponse de l\'API');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération des membres du projet:', error);
+                // Fallback: Ajouter au moins l'utilisateur actuel
+                const option = document.createElement('option');
+                option.value = currentUser;
+                option.textContent = currentUser;
+                taskAssigneeSelect.appendChild(option);
+            });
+                        
             document.getElementById('deleteTask').classList.add('hidden');
             modal.classList.remove('hidden');
             taskTitleInput.focus();
@@ -1542,28 +1556,52 @@ function updateUserAvatar() {
             if (currentColumnId) taskColumnSelect.value = currentColumnId;
             
             taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
-                fetch(`https://staff-task.onrender.com/api/project/${projectId}/members`, {
-                    headers: { 'x-username': localStorage.getItem('currentUser') }
-                })
-                .then(response => response.json())
-                .then(members => {
-                    members.forEach(member => {
+            // Récupérer les membres du projet depuis l'API du board
+            fetch(`https://staff-task.onrender.com/api/board/${projectId}`, {
+                headers: { 'x-username': currentUser }
+            })
+            .then(response => response.json())
+            .then(boardData => {
+                // Vérifier si boardData.members existe
+                if (boardData.members && Array.isArray(boardData.members)) {
+                    boardData.members.forEach(member => {
                         const option = document.createElement('option');
-                        option.value = member.username;
-                        option.textContent = member.username;
-                        if (task.assignee === member.username) option.selected = true;
+                        option.value = member;
+                        option.textContent = member;
+                        if (task.assignee === member) option.selected = true;
                         taskAssigneeSelect.appendChild(option);
                     });
                     
                     // Préserver l'assignation existante si nécessaire
-                    if (task.assignee && !members.some(m => m.username === task.assignee)) {
+                    if (task.assignee && !boardData.members.includes(task.assignee)) {
                         const option = document.createElement('option');
                         option.value = task.assignee;
                         option.textContent = task.assignee + ' (non membre)';
                         option.selected = true;
                         taskAssigneeSelect.appendChild(option);
                     }
-                });
+                } else {
+                    console.error('Aucune liste de membres trouvée dans la réponse de l\'API');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération des membres du projet:', error);
+                // Fallback: Ajouter au moins l'utilisateur actuel
+                const option = document.createElement('option');
+                option.value = currentUser;
+                option.textContent = currentUser;
+                if (task.assignee === currentUser) option.selected = true;
+                taskAssigneeSelect.appendChild(option);
+                
+                // Si l'assigné est différent de l'utilisateur actuel, l'ajouter aussi
+                if (task.assignee && task.assignee !== currentUser) {
+                    const assigneeOption = document.createElement('option');
+                    assigneeOption.value = task.assignee;
+                    assigneeOption.textContent = task.assignee;
+                    assigneeOption.selected = true;
+                    taskAssigneeSelect.appendChild(assigneeOption);
+                }
+            });
             
             subtasksList.innerHTML = '';
             (task.subtasks || []).forEach(subtask => {
