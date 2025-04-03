@@ -1448,18 +1448,18 @@ function updateUserAvatar() {
             });
             
             taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
-                fetch('https://staff-task.onrender.com/api/users', {
-                headers: { 'x-username': localStorage.getItem('currentUser') }
-            })
-            .then(response => response.json())
-            .then(users => {
-                users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user.username;
-                    option.textContent = user.username;
-                    taskAssigneeSelect.appendChild(option);
+                fetch(`https://staff-task.onrender.com/api/project/${projectId}/members`, {
+                    headers: { 'x-username': localStorage.getItem('currentUser') }
+                })
+                .then(response => response.json())
+                .then(members => {
+                    members.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member.username;
+                        option.textContent = member.username;
+                        taskAssigneeSelect.appendChild(option);
+                    });
                 });
-            });
             
             document.getElementById('deleteTask').classList.add('hidden');
             modal.classList.remove('hidden');
@@ -1537,19 +1537,28 @@ function updateUserAvatar() {
             if (currentColumnId) taskColumnSelect.value = currentColumnId;
             
             taskAssigneeSelect.innerHTML = '<option value="">Non assigné</option>';
-                fetch('https://staff-task.onrender.com/api/users', {
-                headers: { 'x-username': localStorage.getItem('currentUser') }
-            })
-            .then(response => response.json())
-            .then(users => {
-                users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user.username;
-                    option.textContent = user.username;
-                    if (task.assignee === user.username) option.selected = true;
-                    taskAssigneeSelect.appendChild(option);
+                fetch(`https://staff-task.onrender.com/api/project/${projectId}/members`, {
+                    headers: { 'x-username': localStorage.getItem('currentUser') }
+                })
+                .then(response => response.json())
+                .then(members => {
+                    members.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member.username;
+                        option.textContent = member.username;
+                        if (task.assignee === member.username) option.selected = true;
+                        taskAssigneeSelect.appendChild(option);
+                    });
+                    
+                    // Préserver l'assignation existante si nécessaire
+                    if (task.assignee && !members.some(m => m.username === task.assignee)) {
+                        const option = document.createElement('option');
+                        option.value = task.assignee;
+                        option.textContent = task.assignee + ' (non membre)';
+                        option.selected = true;
+                        taskAssigneeSelect.appendChild(option);
+                    }
                 });
-            });
             
             subtasksList.innerHTML = '';
             (task.subtasks || []).forEach(subtask => {
