@@ -753,6 +753,22 @@ function openProfileModal() {
             reader.readAsDataURL(file);
         }
     });
+
+    const removeAvatarBtn = document.getElementById('removeAvatar');
+if (removeAvatarBtn) {
+    // Afficher le bouton seulement si un avatar est défini
+    const hasCustomAvatar = localStorage.getItem('userAvatar');
+    removeAvatarBtn.style.display = hasCustomAvatar ? 'block' : 'none';
+    
+    removeAvatarBtn.onclick = function() {
+        localStorage.removeItem('userAvatar');
+        avatarPreview.innerHTML = '';
+        avatarPreview.textContent = currentUser.substring(0, 1).toUpperCase();
+        avatarPreview.style.backgroundColor = userColor || '#4c6ef5';
+        // Réinitialiser le champ d'upload
+        avatarUpload.value = '';
+    };
+}
     
     // Déplacer cette partie à l'intérieur de openProfileModal
     const saveProfileBtn = document.getElementById('saveProfile');
@@ -846,22 +862,20 @@ function updateUserAvatar() {
 
     if (!currentUser || !currentUserAvatar) return;
 
-    // 1️⃣ Reset complet de l'avatar
+    // Reset complet de l'avatar
     currentUserAvatar.innerHTML = '';
-    currentUserAvatar.style.backgroundColor = 'transparent';
+    currentUserAvatar.style.backgroundColor = '';
     currentUserAvatar.style.backgroundImage = 'none';
+    currentUserAvatar.textContent = '';
 
-    // 2️⃣ Priorité à l'avatar uploadé
+    // Priorité à l'avatar uploadé
     if (userAvatar) {
         const img = document.createElement('img');
         img.src = userAvatar;
         img.className = 'w-full h-full object-cover rounded-full';
-        img.onload = () => {
-            // Force l'affichage après chargement
-            currentUserAvatar.appendChild(img);
-        };
+        currentUserAvatar.appendChild(img);
     } 
-    // 3️⃣ Fallback sur l'initiale colorée
+    // Fallback sur l'initiale colorée
     else {
         currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
         currentUserAvatar.style.backgroundColor = userColor || '#4c6ef5';
@@ -946,11 +960,24 @@ function openSettingsModal() {
 }
 
 // Initialiser l'avatar de l'utilisateur avec sa couleur personnalisée
-    function initUserAvatar() {
-        const currentUser = localStorage.getItem('currentUser');
-        const userColor = localStorage.getItem('userColor');
+   function initUserAvatar() {
+    const currentUser = localStorage.getItem('currentUser');
+    const userAvatar = localStorage.getItem('userAvatar');
+    const userColor = localStorage.getItem('userColor');
+    
+    if (currentUser && currentUserAvatar) {
+        // Réinitialiser complètement
+        currentUserAvatar.innerHTML = '';
+        currentUserAvatar.textContent = '';
         
-        if (currentUser && currentUserAvatar) {
+        if (userAvatar) {
+            // Afficher l'image si disponible
+            const img = document.createElement('img');
+            img.src = userAvatar;
+            img.className = 'w-full h-full object-cover rounded-full';
+            currentUserAvatar.appendChild(img);
+        } else {
+            // Sinon afficher l'initiale
             currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
             
             if (userColor) {
@@ -963,6 +990,7 @@ function openSettingsModal() {
             }
         }
     }
+}
     
     // Initialiser l'avatar au chargement
     initUserAvatar();
@@ -995,7 +1023,11 @@ function openSettingsModal() {
             <label class="block text-sm font-medium text-gray-700 mb-1">Télécharger une image</label>
             <input type="file" id="avatarUpload" accept="image/*" class="w-full p-1 border border-gray-300 rounded-md">
         </div>
-        
+        <div class="mt-2">
+            <button id="removeAvatar" type="button" class="text-red-500 text-sm hover:text-red-700">
+                <i class="fas fa-times-circle mr-1"></i> Supprimer l'avatar personnalisé
+            </button>
+        </div>
         <div class="mt-4 flex justify-end space-x-3">
             <button id="cancelProfile" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">Annuler</button>
             <button id="saveProfile" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Enregistrer</button>
