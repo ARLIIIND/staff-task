@@ -138,7 +138,6 @@ app.get('/:page', (req, res) => {
 
 // Modifier la route d'inscription pour inclure l'email
 app.post('/api/register', async (req, res) => {
-  console.log('Requête /api/register reçue:', req.body);
   const { username, email, password } = req.body;
   if (!username || !password || !email) return res.status(400).json({ error: 'Champ manquant' });
 
@@ -433,15 +432,20 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-    console.log('Requête /api/login reçue:', req.body);
     const { username, password } = req.body;
     
     try {
-        const user = await User.findOne({ username });
+        // Utiliser une expression régulière insensible à la casse pour trouver l'utilisateur
+        const user = await User.findOne({ 
+            username: { $regex: new RegExp(`^${username}$`, 'i') } 
+        });
+        
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Identifiants invalides' });
         }
-        res.json({ message: 'Connexion réussie', username });
+        
+        // Retourner le nom d'utilisateur tel qu'il est stocké dans la base de données
+        res.json({ message: 'Connexion réussie', username: user.username });
     } catch (error) {
         console.error('Erreur lors de la connexion:', error);
         res.status(500).json({ error: 'Erreur lors de la connexion' });
@@ -484,19 +488,75 @@ app.post('/api/projects/:projectId/members', authMiddleware, async (req, res) =>
     try {
         const project = await Project.findOne({ id: req.params.projectId });
         if (!project) return res.status(404).json({ error: 'Projet non trouvé' });
-        if (!project.members.includes(req.user)) return res.status(403).json({ error: 'Accès interdit' });
         
-        const userExists = await User.findOne({ username });
+        // Vérifier si l'utilisateur authentifié est le créateur du projet (premier membre)
+        if (project.members[0] !== req.user) {
+            return res.status(403).json({ error: 'Seul le créateur du projet peut ajouter des membres' });
+        }
+        
+        // Rechercher l'utilisateur sans tenir compte de la casse
+        const userExists = await User.findOne({ 
+            username: { $regex: new RegExp(`^${username}$`, 'i') } 
+        });
+        
         if (!userExists) return res.status(404).json({ error: 'Utilisateur non trouvé' });
         
-        if (!project.members.includes(username)) {
-            project.members.push(username);
+        // Utiliser le nom d'utilisateur tel qu'il est dans la base de données (avec la casse correcte)
+        const actualUsername = userExists.username;
+        
+        if (!project.members.includes(actualUsername)) {
+            project.members.push(actualUsername);
             await project.save();
         }
         
         res.json({ members: project.members });
     } catch (error) {
         console.error('Erreur lors de l\'ajout du membre:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.delete('/api/projects/:projectId/members/:memberUsername', authMiddleware, async (req, res) => {
+    try {
+        const project = await Project.findOne({ id: req.params.projectId });
+        if (!project) return res.status(404).json({ error: 'Projet non trouvé' });
+        
+        // Vérifier si l'utilisateur authentifié est le créateur du projet
+        if (project.members[0] !== req.user) {
+            return res.status(403).json({ error: 'Seul le créateur du projet peut supprimer des membres' });
+        }
+        
+        // Ne pas permettre au créateur de se supprimer lui-même
+        if (req.params.memberUsername === req.user) {
+            return res.status(400).json({ error: 'Le créateur ne peut pas se supprimer du projet' });
+        }
+        
+        // Supprimer le membre
+        project.members = project.members.filter(member => member !== req.params.memberUsername);
+        await project.save();
+        
+        res.json({ members: project.members });
+    } catch (error) {
+        console.error('Erreur lors de la suppression du membre:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+app.delete('/api/projects/:projectId', authMiddleware, async (req, res) => {
+    try {
+        const project = await Project.findOne({ id: req.params.projectId });
+        if (!project) return res.status(404).json({ error: 'Projet non trouvé' });
+        
+        // Vérifier si l'utilisateur authentifié est le créateur du projet
+        if (project.members[0] !== req.user) {
+            return res.status(403).json({ error: 'Seul le créateur du projet peut le supprimer' });
+        }
+        
+        await Project.deleteOne({ id: req.params.projectId });
+        
+        res.json({ message: 'Projet supprimé avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la suppression du projet:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -564,7 +624,17 @@ app.post('/api/templates', authMiddleware, async (req, res) => {
 
 app.delete('/api/templates/:templateId', authMiddleware, async (req, res) => {
     try {
-        await Project.deleteOne({ id: req.params.templateId, isTemplate: true });
+        const result = await Project.deleteOne({ 
+            id: req.params.templateId, 
+            id: { $regex: /^template-/ } // S'assurer que c'est bien un template
+        });
+        
+        console.log('Résultat de la suppression:', result);
+        
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Template non trouvé' });
+        }
+        
         res.json({ message: 'Template supprimé avec succès' });
     } catch (error) {
         console.error('Erreur lors de la suppression du template:', error);

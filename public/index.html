@@ -123,6 +123,14 @@
     <div id="toaster" class="toaster"></div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+        // L'utilisateur est déjà connecté, rediriger vers projects
+        window.location.href = 'projects';
+    }
+});
+        
         function showToaster(message, isSuccess = false) {
             const toaster = document.getElementById('toaster');
             toaster.textContent = message;
@@ -219,12 +227,16 @@
                 const response = await fetch('https://staff-task.onrender.com/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ 
+                        username: username, // Le serveur gérera la correspondance sans tenir compte de la casse
+                        password: password 
+                    })
                 });
                 const data = await response.json();
                 
                 if (!response.ok) throw new Error(data.error);
                 
+                // Stocker le nom d'utilisateur tel qu'il est retourné par le serveur (forme correcte)
                 localStorage.setItem('currentUser', data.username);
                 window.location.href = 'projects';
             } catch (error) {

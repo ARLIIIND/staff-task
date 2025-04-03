@@ -718,7 +718,7 @@ initUserAvatar();
         });
     }
 
-    async function openDeleteTemplateModal(templateId) {
+ async function openDeleteTemplateModal(templateId) {
     document.getElementById('deleteTemplateId').value = templateId;
     document.getElementById('deleteTemplateModal').classList.remove('hidden');
 
@@ -728,11 +728,12 @@ initUserAvatar();
 
     document.getElementById('confirmDeleteTemplate').onclick = async function() {
         try {
-            // Ajout de l'en-tête d'authentification
+            const currentUser = localStorage.getItem('currentUser');
+            // Ajouter l'en-tête d'authentification
             const response = await fetch(`https://staff-task.onrender.com/api/templates/${templateId}`, {
                 method: 'DELETE',
                 headers: { 
-                    'x-username': localStorage.getItem('currentUser') 
+                    'x-username': currentUser 
                 }
             });
             
@@ -740,11 +741,12 @@ initUserAvatar();
                 throw new Error('Erreur lors de la suppression du template');
             }
             
-            loadTemplates();
             document.getElementById('deleteTemplateModal').classList.add('hidden');
+            showToaster('Template supprimé avec succès');
+            loadTemplates(); // Recharger les templates
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
-            alert('Erreur lors de la suppression du template: ' + error.message);
+            showToaster('Erreur lors de la suppression du template: ' + error.message);
         }
     };
 }
