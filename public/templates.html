@@ -278,6 +278,11 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
+       window.addEventListener('load', function() {
+        // Double vérification après le chargement complet
+        setTimeout(initUserAvatar, 100);
+    });
+
 
      document.getElementById('cancelProfile')?.addEventListener('click', function() {
         document.getElementById('profileModal').classList.add('hidden');
@@ -482,14 +487,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
     
-    const currentUserAvatar = document.getElementById('currentUserAvatar');
-    const firstLetter = currentUser.substring(0, 1).toUpperCase();
-    currentUserAvatar.textContent = firstLetter;
-    currentUserAvatar.title = currentUser;
-    
-    // Appliquer une couleur en fonction de la première lettre
-    currentUserAvatar.classList.add(`user-${firstLetter}`);
-    
+initUserAvatar();
+
+
     // Supprimer la génération d'utilisateurs fictifs en ligne
         const onlineUsers = document.getElementById('onlineUsers');
         if (onlineUsers) {
@@ -1115,39 +1115,47 @@ function openSettingsModal() {
     modal.classList.remove('hidden');
 }
 
-// Initialiser l'avatar de l'utilisateur avec sa couleur personnalisée
-   function initUserAvatar() {
+function initUserAvatar() {
     const currentUser = localStorage.getItem('currentUser');
     const userAvatar = localStorage.getItem('userAvatar');
     const userColor = localStorage.getItem('userColor');
+    const currentUserAvatar = document.getElementById('currentUserAvatar');
     
-    if (currentUser && currentUserAvatar) {
-        // Réinitialiser complètement
-        currentUserAvatar.innerHTML = '';
-        currentUserAvatar.textContent = '';
+    if (!currentUser || !currentUserAvatar) return;
+    
+    // Réinitialiser TOUT d'abord
+    currentUserAvatar.innerHTML = '';
+    currentUserAvatar.textContent = '';
+    currentUserAvatar.className = 'user-avatar cursor-pointer'; // Garder uniquement les classes de base
+    currentUserAvatar.style = ''; // Réinitialiser tous les styles en ligne
+    
+    // Ajouter le titre
+    currentUserAvatar.title = currentUser;
+    
+    if (userAvatar) {
+        // Version avec avatar personnalisé
+        currentUserAvatar.style.padding = '0';
+        currentUserAvatar.style.overflow = 'hidden';
         
-        if (userAvatar) {
-            // Afficher l'image si disponible
-            const img = document.createElement('img');
-            img.src = userAvatar;
-            img.className = 'w-full h-full object-cover rounded-full';
-            currentUserAvatar.appendChild(img);
+        const img = document.createElement('img');
+        img.src = userAvatar;
+        img.className = 'w-full h-full object-cover rounded-full';
+        currentUserAvatar.appendChild(img);
+    } else {
+        // Version avec initiale
+        const firstLetter = currentUser.substring(0, 1).toUpperCase();
+        currentUserAvatar.textContent = firstLetter;
+        
+        if (userColor) {
+            currentUserAvatar.style.backgroundColor = userColor;
         } else {
-            // Sinon afficher l'initiale
-            currentUserAvatar.textContent = currentUser.substring(0, 1).toUpperCase();
-            
-            if (userColor) {
-                currentUserAvatar.style.backgroundColor = userColor;
-            } else {
-                // Assigner une couleur aléatoire si pas encore définie
-                const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
-                localStorage.setItem('userColor', randomColor);
-                currentUserAvatar.style.backgroundColor = randomColor;
-            }
+            // Assigner une couleur aléatoire si pas encore définie
+            const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+            localStorage.setItem('userColor', randomColor);
+            currentUserAvatar.style.backgroundColor = randomColor;
         }
     }
 }
-    
     // Initialiser l'avatar au chargement
     initUserAvatar();
 
