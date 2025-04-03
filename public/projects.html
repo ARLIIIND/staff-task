@@ -226,6 +226,14 @@
 
 document.addEventListener('DOMContentLoaded', async function() {
 
+    const currentUser = localStorage.getItem('currentUser');
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!currentUser) {
+        window.location.href = 'index';
+        return;
+    }
+    
        window.addEventListener('load', function() {
         // Double vérification après le chargement complet
         setTimeout(initUserAvatar, 100);
